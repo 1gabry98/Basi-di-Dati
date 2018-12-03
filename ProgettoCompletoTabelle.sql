@@ -7,7 +7,7 @@ CREATE TABLE Utente
 (
     Id INT NOT NULL AUTO_INCREMENT,
     Password VARCHAR(24) NOT NULL,
-    Ruolo VARCHAR(20) NOT NULL,
+    Ruolo ENUM ('Fruitore','Proponente') DEFAULT 'Fruitore',
     Indirizzo VARCHAR (100) NOT NULL,
     Cognome VARCHAR(20) NOT NULL,
     Nome VARCHAR(20) NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE StelleUtente
     Id INT NOT NULL,
     Persona DOUBLE NOT NULL,
     PiacereViaggio DOUBLE NOT NULL,
-    Serietà DOUBLE NOT NULL,
+    Serieta DOUBLE NOT NULL,
     Comportamento DOUBLE NOT NULL,
         PRIMARY KEY (CodVoto),
         FOREIGN KEY(CodVoto) 
@@ -216,8 +216,9 @@ CREATE TABLE ValutazioneFruitoreNoleggio
 CREATE TABLE StelleFruitoreNoleggio
 (
     CodVoto INT NOT NULL,
+    Id INT NOT NULL,
     Persona DOUBLE NOT NULL,
-    PiacereDiViaggio DOUBLE NOT NULL,
+    PiacereViaggio DOUBLE NOT NULL,
     Comportamento DOUBLE NOT NULL,
     Serieta DOUBLE NOT NULL,
         PRIMARY KEY (CodVoto),
@@ -796,71 +797,9 @@ CREATE TABLE TrackingPool
 
 
 
-
-
-
-
-
-
-/*INSERT*/
-
--- UTENTE 
-/*INSERT INTO Utente ( Password, Ruolo, Indirizzo, Cognome, Nome,CodFiscale, MediaVoto) VALUES('root' , 'fruitore', 'Largo Catallo 11', 'Marino', 'Gabriele','PGGLRD98E28C309F', '0');
-INSERT INTO Utente ( Password, Ruolo, Indirizzo, Cognome, Nome,CodFiscale, MediaVoto) VALUES('root' , 'proponente', 'Via Strada di Salci 46', 'Scebba', 'Andrea Angelo','SCBNRN98S06B429H', '0');
--- DOCUMENTO
-INSERT INTO Documento VALUES ('AX964319', '1', 'Carta di identità', '2018-02-10', 'Comune');
-INSERT INTO Documento VALUES ('AE162249', '2', 'Carta di identità', '2018-03-01', 'Comune'); */
-
--- VALUTAZIONE UTENTE
--- INSERT INTO ValutazioneUtente(Id, Ruolo, Recensione) VALUES ('1', 'fruitore', 'Bravino');
--- STELLE UTENTE
--- INSERT INTO StelleUtente VALUES ('1','1', '3', '3', '3', '3');
-
--- SHARING MULTIPLO
-/*INSERT INTO ChiamataSharingMultiplo VALUES ('1', '2017-02-02 12:33:33' , 'Roma', '1');
--- ancora non fatto sharing  INSERT INTO SharingMultiplo(Id, codSharing1, codSharing2) 
--- RIDE SHARING
-INSERT INTO TragittoSharing (kmPercorsi) VALUES ('8');
--- POSIZIONE SHARING
-INSERT INTO PosizionePartenzaSharing VALUES ('1', '12');
-INSERT INTO PosizioneArrivoSharing VALUES ('1', '20');
--- STRADA
-INSERT INTO Strada(Tipologia, ClassificazioneTecnica, Lunghezza) VALUES ('statale', 'urbana', '20');
-INSERT INTO Strada(Tipologia, ClassificazioneTecnica, Lunghezza) VALUES ('statale', 'urbana', '40');
--- CORSIE DI IMMISSIONE
-INSERT INTO CorsieDiImmissione(CodStrada1, CodStrada2, kmStrada1, kmStrada2) VALUES ('1', '2', '10', '20');
--- LIMITI DI VELOCITA'
-INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('40','1','20', '1');
-INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('80','1','40', '2');
--- CAR SHARING
-INSERT INTO PrenotazioneDiNoleggio (DataInizio, DataFine, idFruitore, Targa, idProponente) VALUES ('2018-01-01', '2018-01-01', '1', 'AE987CB', '2');
--- VALUTAZIONE FRUITORE NOLEGGIO
-INSERT INTO valutazioneFruitoreNoleggio(IdProponente, IdFruitore, Recensione) VALUES ('1', '2', 'BRAVINO');
--- STELLE FRUITORE NOLEGGIO
-INSERT INTO StelleFruitoreNoleggio VALUES('1','3','3','3','3');
--- VALUTAZIONE PROPONENTE NOLEGGIOarchivioprenotazionirifiutate
-INSERT INTO ValutazioneProponenteNoleggio (IdProponente, IdFruitore,Recensione) VALUES ('1', '2', 'Ottimo');
--- STELLE PROPONENTE NOLEGGIO
-INSERT INTO StelleProponenteNoleggio VALUES( '1', '3','3','3','3');
--- ARCHIVIO
-INSERT INTO ArchivioPrenotazioniRifiutate VALUES('2','1','AE987CB');
-INSERT INTO ArchivioPrenotazioniVecchie VALUES('1','2018-01-01', '2018-01-01', '1', 'AE987CB', '2');
--- TRAGITTO NOLEGGIO
-INSERT INTO TragittoNoleggio(kmPercorsi) VALUES ('20');
--- POSIZIONE NOLEGGIO
-INSERT INTO PosizioneArrivoNoleggio VALUES ('1','10');
-INSERT INTO PosizionePartenzaNoleggio VALUES ('1', '1');
--- TRACKING NOLEGGIO
-INSERT INTO TrackingNoleggio VALUES( 'AE987CB', '1','root','4','2017-02-02 12:33:33');
--- AUTO
-INSERT INTO Auto VALUES('AE987CB', '2', '0', '1', '0');
-*/
-
-
-
 /*TRIGGER*/
 DELIMITER $$
-CREATE TRIGGER AggiornaMediaVoto
+CREATE TRIGGER aggiorna_media_voto
 AFTER INSERT ON StelleUtente FOR EACH ROW
 
 BEGIN
@@ -932,7 +871,7 @@ BEGIN
     
 END $$ 
 		
-CREATE TRIGGER controlla_posizione
+CREATE TRIGGER controlla_posizione_partenza
 BEFORE INSERT ON PosizionePartenzaNoleggio FOR EACH ROW
 
 BEGIN
@@ -947,28 +886,188 @@ BEGIN
     
 END $$
 
-DELIMITER ;
+CREATE TRIGGER controlla_posizione_arrivo
+BEFORE INSERT ON PosizioneArrivoNoleggio FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+
+CREATE TRIGGER verifica_pedaggio
+BEFORE INSERT ON Pedaggio FOR EACH ROW
+
+BEGIN
+	IF(NEW.Importo < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Immettere importo valido';
+	END IF;
+        
+	SET @strada = NEW.CodStrada;
+    
+    SET @tipo_strada_da_controllare = (SELECT Tipologia
+										FROM Strada
+                                        WHERE CodStrada = @strada);
+	
+    IF(@tipo_strada_da_controllare <> 'Autostrada') THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'La strada selezionata non è una autostrada';
+	END IF;
+        
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = @strada);
+	IF(NEW.kmStrada1 < 0 OR NEW.kmStrada2 < 0 OR NEW.kmStrada1 > @km OR NEW.kmStrada2 > @km) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Immettere un chilometro corretto';
+	END IF;
+END $$ 
 
 
-/* INSERT PER I TRIGGER */	
-INSERT INTO Utente ( Password, Ruolo, Indirizzo, Cognome, Nome,CodFiscale, MediaVoto) VALUES('root' , 'fruitore', 'Largo Catallo 11', 'Marino', 'Gabriele','PGGLRD98E28C309F', '0');
-INSERT INTO Utente ( Password, Ruolo, Indirizzo, Cognome, Nome,CodFiscale, MediaVoto) VALUES('root' , 'proponente', 'Via Strada di Salci 46', 'Scebba', 'Andrea Angelo','SCBNRN98S06B429H', '0');
+
+CREATE TRIGGER controlla_prenotazione_di_noleggio
+BEFORE INSERT ON PrenotazioneDiNoleggio FOR EACH ROW
+
+BEGIN
+	IF(NEW.DataInizio < current_date() OR NEW.DataFine < current_date()) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Immettere una data valida';
+	END IF;
+
+	SET @fruitore = (SELECT Id
+					FROM Utente
+					WHERE Id = NEW.IdFruitore);
+                    
+	IF(@fruitore = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Immettere un utente esistente';
+	END IF;
+	
+    SET @ruolo = (SELECT Ruolo 
+				FROM Utente
+				WHERE Id = NEW.IdProponente);
+                
+	IF(@ruolo <> 'Proponente') THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Id associato ad un utente non proponente';
+	END IF;
+    
+END $$
+
+
+CREATE TRIGGER aggiorna_ruolo
+AFTER INSERT ON Auto FOR EACH ROW
+
+BEGIN
+	SET @ruolo = (SELECT Ruolo
+				  FROM Utente
+                  WHERE Id = NEW.Id);
+	
+    IF(@ruolo = 'Fruitore') THEN
+		UPDATE Utente
+        SET Ruolo = 'Proponente'
+        WHERE Id = NEW.Id;
+	END IF;
+END $$
+
+CREATE TRIGGER aggiungi_voto #aggiunge automaticamente i voti dei noleggi
+AFTER INSERT ON ValutazioneFruitoreNoleggio FOR EACH ROW
+
+BEGIN
+	INSERT ValutazioneUtente
+    SET CodVoto = NEW.CodVoto, Id = NEW.IdFruitore, Ruolo = 'Fruitore', Recensione = NEW.Recensione;
+END $$ 
+
+	
+CREATE TRIGGER aggiungi_stelle #aggiunge automaticamente le stelle dei noleggi
+AFTER INSERT ON StelleFruitoreNoleggio FOR EACH ROW
+		
+BEGIN
+	INSERT StelleUtente
+    SET CodVoto = NEW.CodVoto, Id = NEW.Id, Persona = NEW.Persona, PiacereViaggio = NEW.PiacereViaggio, 	Comportamento = NEW.Comportamento, Serieta = NEW.Serieta;
+END $$
+ 
+ DELIMITER ;
+
+/*INSERT*/
+
+-- UTENTE 
+INSERT INTO Utente ( Password, Indirizzo, Cognome, Nome,CodFiscale) VALUES('root' , 'Largo Catallo 11', 'Marino', 'Gabriele','PGGLRD98E28C309F');
+INSERT INTO Utente ( Password, Indirizzo, Cognome, Nome,CodFiscale) VALUES('root' , 'Via Strada di Salci 46', 'Scebba', 'Andrea Angelo','SCBNRN98S06B429H');
 -- DOCUMENTO
-INSERT INTO Documento VALUES ('AX964319', '1', 'Carta di identità', '2018-02-10', 'Comune');
-INSERT INTO Documento VALUES ('AE162249', '2', 'Carta di identità', '2018-03-01', 'Comune');
+INSERT INTO Documento VALUES ('AX964319', '1', 'Carta di identità', '2020-02-10', 'Comune');
+INSERT INTO Documento VALUES ('AE162249', '2', 'Carta di identità', '2023-03-01', 'Comune'); 
 
 -- VALUTAZIONE UTENTE
-INSERT INTO ValutazioneUtente(Id, Ruolo, Recensione) VALUES ('1', 'fruitore', 'Bravino');
+/*INSERT INTO ValutazioneUtente(Id, Ruolo, Recensione) VALUES ('1', 'fruitore', 'Bravino');
 INSERT INTO `progetto`.`valutazioneutente` (`Id`, `Ruolo`, `Recensione`) VALUES ('1', 'fruitore', 'Insomma');
 INSERT INTO `progetto`.`valutazioneutente` (`Id`, `Ruolo`, `Recensione`) VALUES ('1', 'fruitore', 'Bravissimo');
-INSERT INTO `progetto`.`valutazioneutente` (`CodVoto`, `Id`, `Ruolo`, `Recensione`) VALUES ('4', '1', 'fruitore', 'scemo di merda');
-
+INSERT INTO `progetto`.`valutazioneutente` (`CodVoto`, `Id`, `Ruolo`, `Recensione`) VALUES ('4', '1', 'fruitore', 'scemo di merda');*/
 
 -- STELLE UTENTE
-INSERT INTO StelleUtente VALUES ('1','1', '3', '3', '3', '3');
-INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('2', '1', '1', '1', '2', '1');
-INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('3', '1', '2', '1', '1', '2');
-INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('4', '1', '2', '4', '5', '1');
+  /*INSERT INTO StelleUtente VALUES ('1','1', '3', '3', '3', '3');
+  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('2', '1', '1', '1', '2', '1');
+  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('3', '1', '2', '1', '1', '2');
+  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('4', '1', '2', '4', '5', '1');*/
+
+-- AUTO
+INSERT INTO Auto VALUES('AE987CB', '2', '0', '1', '0');
 
 
+-- SHARING MULTIPLO
+-- INSERT INTO ChiamataSharingMultiplo VALUES ('1', '2017-02-02 12:33:33' , 'Roma', '1');
+-- ancora non fatto sharing  INSERT INTO SharingMultiplo(Id, codSharing1, codSharing2) 
 
+-- RIDE SHARING
+INSERT INTO TragittoSharing (kmPercorsi) VALUES ('8');
+-- POSIZIONE SHARING
+INSERT INTO PosizionePartenzaSharing VALUES ('1', '12');
+INSERT INTO PosizioneArrivoSharing VALUES ('1', '20');
+
+-- STRADA
+INSERT INTO Strada(Tipologia, ClassificazioneTecnica, Lunghezza) VALUES ('statale', 'urbana', '20');
+INSERT INTO Strada(Tipologia, ClassificazioneTecnica, Lunghezza) VALUES ('statale', 'urbana', '40');
+-- CORSIE DI IMMISSIONE
+INSERT INTO CorsieDiImmissione(CodStrada1, CodStrada2, kmStrada1, kmStrada2) VALUES ('1', '2', '10', '20');
+-- LIMITI DI VELOCITA'
+INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('40','1','20', '1');
+INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('80','1','40', '2');
+
+-- CAR SHARING
+INSERT INTO PrenotazioneDiNoleggio (DataInizio, DataFine, idFruitore, Targa, idProponente) VALUES ('2019-01-01', '2019-01-01', '1', 'AE987CB', '2');
+-- VALUTAZIONE FRUITORE NOLEGGIO
+INSERT INTO valutazioneFruitoreNoleggio(IdProponente, IdFruitore, Recensione) VALUES ('1', '2', 'BRAVINO');
+INSERT INTO `progetto`.`valutazionefruitorenoleggio` (`IdProponente`, `IdFruitore`, `Recensione`) VALUES ('1', '1', 'INSOMMA');
+UPDATE `progetto`.`valutazionefruitorenoleggio` SET `IdProponente` = '2', `IdFruitore` = '1' WHERE (`CodVoto` = '1');
+INSERT INTO `progetto`.`valutazionefruitorenoleggio` (`IdProponente`, `IdFruitore`, `Recensione`) VALUES ('1', '2', 'SI');
+INSERT INTO `progetto`.`valutazionefruitorenoleggio` (`IdProponente`, `IdFruitore`, `Recensione`) VALUES ('1', '2', 'OTTIMO');
+INSERT INTO `progetto`.`valutazionefruitorenoleggio` (`IdProponente`, `IdFruitore`, `Recensione`) VALUES ('2', '1', 'SUPER');
+
+-- STELLE FRUITORE NOLEGGIO
+INSERT INTO StelleFruitoreNoleggio VALUES('1','1','3','3','3','3');
+INSERT INTO `progetto`.`stellefruitorenoleggio` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Comportamento`, `Serieta`) VALUES ('2', '1', '3', '2', '1', '5');
+INSERT INTO `progetto`.`stellefruitorenoleggio` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Comportamento`, `Serieta`) VALUES ('3', '1', '5', '2', '3', '2');
+INSERT INTO `progetto`.`stellefruitorenoleggio` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Comportamento`, `Serieta`) VALUES ('4', '2', '1', '1', '1', '1');
+INSERT INTO `progetto`.`stellefruitorenoleggio` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Comportamento`, `Serieta`) VALUES ('5', '1', '3', '3', '3', '3');
+
+-- VALUTAZIONE PROPONENTE NOLEGGIO
+INSERT INTO ValutazioneProponenteNoleggio (IdProponente, IdFruitore,Recensione) VALUES ('1', '2', 'Ottimo');
+-- STELLE PROPONENTE NOLEGGIO
+INSERT INTO StelleProponenteNoleggio VALUES( '1', '3','3','3','3');
+-- ARCHIVIO
+INSERT INTO ArchivioPrenotazioniRifiutate VALUES('2','1','AE987CB');
+INSERT INTO ArchivioPrenotazioniVecchie VALUES('1','2018-01-01', '2018-01-01', '1', 'AE987CB', '2');
+-- TRAGITTO NOLEGGIO
+INSERT INTO TragittoNoleggio(kmPercorsi) VALUES ('20');
+-- POSIZIONE NOLEGGIO
+INSERT INTO PosizioneArrivoNoleggio VALUES ('1','10');
+INSERT INTO PosizionePartenzaNoleggio VALUES ('1', '1');
+-- TRACKING NOLEGGIO
+INSERT INTO TrackingNoleggio VALUES( 'AE987CB', '1','root','4','2017-02-02 12:33:33');
