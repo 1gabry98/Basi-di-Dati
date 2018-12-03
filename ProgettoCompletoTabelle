@@ -921,7 +921,33 @@ BEGIN
 
 END $$
 
+CREATE TRIGGER controlla_data_scadenza_documenti
+BEFORE INSERT ON Documento FOR EACH ROW
 
+BEGIN
+	IF(NEW.Scadenza < current_date()) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Documento scaduto';
+	END IF;
+    
+END $$ 
+		
+CREATE TRIGGER controlla_posizione
+BEFORE INSERT ON PosizionePartenzaNoleggio FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+
+DELIMITER ;
 
 
 /* INSERT PER I TRIGGER */	
