@@ -7,7 +7,7 @@ CREATE TABLE Utente
 (
     Id INT NOT NULL AUTO_INCREMENT,
     Password VARCHAR(24) NOT NULL,
-    Ruolo VARCHAR(20) NOT NULL,
+    Ruolo ENUM ('Fruitore','Proponente') DEFAULT 'Fruitore',
     Indirizzo VARCHAR (100) NOT NULL,
     Cognome VARCHAR(20) NOT NULL,
     Nome VARCHAR(20) NOT NULL,
@@ -216,8 +216,9 @@ CREATE TABLE ValutazioneFruitoreNoleggio
 CREATE TABLE StelleFruitoreNoleggio
 (
     CodVoto INT NOT NULL,
+    Id INT NOT NULL,
     Persona DOUBLE NOT NULL,
-    PiacereDiViaggio DOUBLE NOT NULL,
+    PiacereViaggio DOUBLE NOT NULL,
     Comportamento DOUBLE NOT NULL,
     Serieta DOUBLE NOT NULL,
         PRIMARY KEY (CodVoto),
