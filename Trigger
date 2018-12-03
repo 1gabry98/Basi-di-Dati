@@ -193,5 +193,37 @@ BEGIN
     
 END $$
 
+CREATE TRIGGER aggiorna_ruolo
+AFTER INSERT ON Auto FOR EACH ROW
+
+BEGIN
+	SET @ruolo = (SELECT Ruolo
+				  FROM Utente
+                  WHERE Id = NEW.Id);
+	
+    IF(@ruolo = 'Fruitore') THEN
+		UPDATE Utente
+        SET Ruolo = 'Proponente'
+        WHERE Id = NEW.Id;
+	END IF;
+END $$
+
+CREATE TRIGGER aggiungi_voto #aggiunge automaticamente i voti dei noleggi
+AFTER INSERT ON ValutazioneFruitoreNoleggio FOR EACH ROW
+
+BEGIN
+	INSERT ValutazioneUtente
+    SET CodVoto = NEW.CodVoto, Id = NEW.IdFruitore, Ruolo = 'Fruitore', Recensione = NEW.Recensione;
+END $$ 
+
+	
+CREATE TRIGGER aggiungi_stelle #aggiunge automaticamente le stelle dei noleggi
+AFTER INSERT ON StelleFruitoreNoleggio FOR EACH ROW
+		
+BEGIN
+	INSERT StelleUtente
+    SET CodVoto = NEW.CodVoto, Id = NEW.Id, Persona = NEW.Persona, PiacereViaggio = NEW.PiacereViaggio, 	Comportamento = NEW.Comportamento, Serieta = NEW.Serieta;
+END $$
+
 DELIMITER ;
 	
