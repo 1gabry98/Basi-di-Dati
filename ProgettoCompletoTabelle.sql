@@ -191,6 +191,7 @@ CREATE TABLE PrenotazioneDiNoleggio
     IdFruitore INT NOT NULL,
     Targa VARCHAR(7) NOT NULL,
     IdProponente INT NOT NULL,
+    Stato ENUM ('ATTIVO', 'CHIUSO','RIFIUTATO') DEFAULT 'ATTIVO',
         PRIMARY KEY(CodNoleggio),
         FOREIGN KEY (IdProponente)
         REFERENCES Utente(Id)
@@ -257,69 +258,68 @@ CREATE TABLE Auto
 
 
 
-CREATE TABLE StelleProponenteNoleggio
-(
-CodVoto INT NOT NULL,
-Persona DOUBLE NOT NULL,
-PiacereDiViaggio DOUBLE NOT NULL,
-Comportamento DOUBLE NOT NULL,
-Serieta DOUBLE NOT NULL,
+CREATE TABLE StelleProponenteNoleggio (
+    CodVoto INT NOT NULL,
+    Persona DOUBLE NOT NULL,
+    PiacereViaggio DOUBLE NOT NULL,
+    Comportamento DOUBLE NOT NULL,
+    Serieta DOUBLE NOT NULL,
     PRIMARY KEY (CodVoto),
     FOREIGN KEY (CodVoto)
-    REFERENCES ValutazioneProponenteNoleggio(CodVoto)
+        REFERENCES ValutazioneProponenteNoleggio (CodVoto)
 );
 
 
 
-CREATE TABLE ArchivioPrenotazioniRifiutate
-(
-CodNoleggio INT NOT NULL  AUTO_INCREMENT,
-Id INT NOT NULL,
-Targa VARCHAR(7) NOT NULL,
+CREATE TABLE ArchivioPrenotazioniRifiutate (
+    CodNoleggio INT NOT NULL,
+    IdFruitore INT NOT NULL,
+    IdProponente INT NOT NULL,
+    Targa VARCHAR(7) NOT NULL,
     PRIMARY KEY (CodNoleggio),
-    FOREIGN KEY (Id)
-    REFERENCES Utente(Id)
+    FOREIGN KEY (IdFruitore)
+        REFERENCES Utente (Id),
+	FOREIGN KEY (IdProponente)
+		REFERENCES Utente(Id)
 );
 
 
-CREATE TABLE ArchivioPrenotazioniVecchie
-(
-CodNoleggio INT NOT NULL  AUTO_INCREMENT,
-DataInizio DATE NOT NULL,
-DataFine DATE NOT NULL,
-IdFruitore INT NOT NULL,
-Targa VARCHAR(7) NOT NULL,
-IdProponente INT NOT NULL,
-    PRIMARY KEY (CodNoleggio)    
+CREATE TABLE ArchivioPrenotazioniVecchie (
+    CodNoleggio INT NOT NULL,
+    DataInizio DATE NOT NULL,
+    DataFine DATE NOT NULL,
+    IdFruitore INT NOT NULL,
+    Targa VARCHAR(7) NOT NULL,
+    IdProponente INT NOT NULL,
+    PRIMARY KEY (CodNoleggio)
 );
 
 
 
-CREATE TABLE TragittoNoleggio(
-CodTragitto INT NOT NULL auto_increment,
-KmPercorsi DOUBLE NOT NULL,
+CREATE TABLE TragittoNoleggio (
+    CodTragitto INT NOT NULL AUTO_INCREMENT,
+    KmPercorsi DOUBLE NOT NULL,
     PRIMARY KEY (CodTragitto)
 );
 
 
 
-CREATE TABLE PosizioneArrivoNoleggio
-(
-CodStrada INT NOT NULL  AUTO_INCREMENT,
-NumChilometro INT NOT NULL,
+CREATE TABLE PosizioneArrivoNoleggio (
+    CodStrada INT NOT NULL AUTO_INCREMENT,
+    NumChilometro INT NOT NULL,
     PRIMARY KEY (CodStrada),
     FOREIGN KEY (CodStrada)
-    REFERENCES Strada(CodStrada )
+        REFERENCES Strada (CodStrada)
 );
 
 
 CREATE TABLE PosizionePartenzaNoleggio (
-CodStrada INT NOT NULL,
-NumChilometro DOUBLE NOT NULL,
-    PRIMARY KEY(CodStrada),
+    CodStrada INT NOT NULL,
+    NumChilometro DOUBLE NOT NULL,
+    PRIMARY KEY (CodStrada),
     FOREIGN KEY (CodStrada)
-    REFERENCES Strada(CodStrada)
-    ON DELETE CASCADE
+        REFERENCES Strada (CodStrada)
+        ON DELETE CASCADE
 );
 
 
@@ -347,23 +347,24 @@ CREATE TABLE SinistroNoleggio
     Modello  VARCHAR(24) NOT NULL,
     CasaAutomobilistica VARCHAR(24) NOT NULL,
     TargaVeicoloProponente VARCHAR(7) NOT NULL,
-    Orario TIMESTAMP NOT NULL,    -- ?
+    Orario TIMESTAMP NOT NULL, 
+    CodStrada INT NOT NULL,
     KmStrada INT NOT NULL,
     Dinamica VARCHAR(200) NOT NULL,
-    PercentualeDiResponsabilità INT NOT NULL,
+    PercentualeDiResponsabilita INT NOT NULL,
         PRIMARY KEY (CodSinistro),
         FOREIGN KEY (TargaVeicoloProponente)
         REFERENCES     Auto(Targa)
 );
 
 
-CREATE TABLE GeneralitàSinistroNoleggio
+CREATE TABLE GeneralitaSinistroNoleggio
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
-    Congome VARCHAR(24) NOT NULL,
-    Nome VARCHAR(24) NOT NULL,
-    Indizirro VARCHAR(24) NOT NULL,
+    Cognome VARCHAR(40) NOT NULL,
+    Nome VARCHAR(40) NOT NULL,
+    Indirizzo VARCHAR(40) NOT NULL,
     NumTelefono INT NOT NULL,
         PRIMARY KEY (NumDocumento),
         FOREIGN KEY (NumDocumento)
@@ -371,12 +372,12 @@ CREATE TABLE GeneralitàSinistroNoleggio
 );
 
 
-CREATE TABLE DocumentoDiIdentitàSinistroNoleggio
+CREATE TABLE DocumentoDiIdentitaSinistroNoleggio
 (
     NumDocumento VARCHAR (9) NOT NULL,
     Tipologia VARCHAR(24) NOT NULL,
     Scadenza DATE NOT NULL,
-    Ente VARCHAR(24) NOT NULL,
+    EnteRilascio VARCHAR(24) NOT NULL,
         PRIMARY KEY (NumDocumento),
         FOREIGN KEY (NumDocumento)
         REFERENCES Documento(NumDocumento)
@@ -440,35 +441,35 @@ CREATE TABLE SinistroPool
     Orario TIMESTAMP NOT NULL,    
     KmStrada INT NOT NULL,
     Dinamica VARCHAR(200) NOT NULL,
-    PercentualeDiResponsabilità INT NOT NULL,
+    PercentualeDiResponsabilita INT NOT NULL,
         PRIMARY KEY (CodSinistro),
         FOREIGN KEY (TargaVeicoloProponente)
         REFERENCES Auto(Targa)
 );
 
 
-CREATE TABLE GeneralitàSinistroPool
+CREATE TABLE GeneralitaSinistroPool
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
-    Congome VARCHAR(24) NOT NULL,
+    Cognome VARCHAR(24) NOT NULL,
     Nome VARCHAR(24) NOT NULL,
-    Indizirro VARCHAR(24) NOT NULL,
+    Indirizzo VARCHAR(24) NOT NULL,
     NumTelefono INT NOT NULL,
-        PRIMARY KEY (NumDocumento),
+        PRIMARY KEY (NumDocumento, CodFiscale),
         FOREIGN KEY (NumDocumento)
         REFERENCES Documento(NumDocumento)
 );
 
 
 
-CREATE TABLE DocumentoDiIdentitàSinistroPool
+CREATE TABLE DocumentoDiIdentitaSinistroPool
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
-    Congome VARCHAR(24) NOT NULL,
+    Cognome VARCHAR(24) NOT NULL,
     Nome VARCHAR(24) NOT NULL,
-    Indizirro VARCHAR(24) NOT NULL,
+    Indirizzo VARCHAR(24) NOT NULL,
     NumTelefono INT NOT NULL,
         PRIMARY KEY (NumDocumento),
         FOREIGN KEY (NumDocumento)
@@ -509,7 +510,7 @@ CREATE TABLE SommaCostiAttuale
 CREATE TABLE ArchivioPoolVecchi 
 (
     CodPool INT NOT NULL,    
-    GradoDIFlessibilita ENUM ('BASSO', 'MEDIO', 'ALTO'),
+    GradoDiFlessibilita ENUM ('BASSO', 'MEDIO', 'ALTO'),
     GiornoDiArrivo TIMESTAMP NOT NULL,
     GiornoDiPartenza TIMESTAMP NOT NULL,
     OrarioDiPartenza TIMESTAMP NOT NULL,
@@ -527,9 +528,9 @@ CREATE TABLE SommaCostiVecchiaPool
     CostoCarburante DOUBLE NOT NULL,
     CostoOperativo DOUBLE NOT NULL,
     CostoUsura DOUBLE NOT NULL,
-    ConsumeUrbano DOUBLE NOT NULL,
+    ConsumoUrbano DOUBLE NOT NULL,
     ConsumoExtraUrbano DOUBLE NOT NULL,
-    CosnumoMisto DOUBLE NOT NULL,
+    ConsumoMisto DOUBLE NOT NULL,
         PRIMARY KEY (CodPool),
         FOREIGN KEY (CodPool)
         REFERENCES Pool(CodPool)
@@ -754,7 +755,7 @@ CREATE TABLE SinistroSharing
 
 
 
-CREATE TABLE GeneralitàSinistroSharing 
+CREATE TABLE GeneralitaSinistroSharing 
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
@@ -769,7 +770,7 @@ CREATE TABLE GeneralitàSinistroSharing
 
 
 
-CREATE TABLE DocumentoDiIdentitàSinistroSharing 
+CREATE TABLE DocumentoDiIdentitaSinistroSharing 
 (
     NumDocumento VARCHAR (9) NOT NULL,
     Tipologia VARCHAR(24) NOT NULL,
@@ -871,7 +872,7 @@ BEGIN
     
 END $$ 
 		
-CREATE TRIGGER controlla_posizione_partenza
+CREATE TRIGGER controlla_posizione_partenza_noleggio
 BEFORE INSERT ON PosizionePartenzaNoleggio FOR EACH ROW
 
 BEGIN
@@ -886,7 +887,7 @@ BEGIN
     
 END $$
 
-CREATE TRIGGER controlla_posizione_arrivo
+CREATE TRIGGER controlla_posizione_arrivo_noleggio
 BEFORE INSERT ON PosizioneArrivoNoleggio FOR EACH ROW
 
 BEGIN
@@ -977,37 +978,6 @@ BEGIN
 	END IF;
 END $$
 
-DROP TRIGGER IF EXISTS verifica_immissione $$
-CREATE TRIGGER verifica_immissione
-AFTER INSERT ON CorsieDiImmissione
-FOR EACH ROW
-BEGIN
-	IF NEW.CodStrada1 = NEW.CodStrada2 THEN
-		SIGNAL SQLSTATE '45000'
-		SET MESSAGE_TEXT = 'Errore. Le trade non possono essere uguali!';
-	END IF;
-END $$
-
-
-
-DROP TRIGGER IF EXISTS verifica_limite_di_velocita $$
-CREATE TRIGGER verifica_limite_di_velocita
-AFTER INSERT ON LimitiDiVelocita
-FOR EACH ROW
-BEGIN
-	IF NEW.kmFine = NEW.kmInizio THEN
-		SIGNAL SQLSTATE '45000'
-		SET MESSAGE_TEXT = 'Errore. Chilometri non validi!';
-	END IF;
-    
-    IF ValoreLimite%10 <> 0 OR ValoreLimite < 10 OR ValoreLimite > 130 THEN
-		SIGNAL SQLSTATE '45000'
-		SET MESSAGE_TEXT = 'Errore. Valore Limite di velocità non valido';
-	END IF;
-    
-END $$
-	   
-	   
 CREATE TRIGGER aggiungi_voto #aggiunge automaticamente i voti dei noleggi
 AFTER INSERT ON ValutazioneFruitoreNoleggio FOR EACH ROW
 
@@ -1024,7 +994,214 @@ BEGIN
 	INSERT StelleUtente
     SET CodVoto = NEW.CodVoto, Id = NEW.Id, Persona = NEW.Persona, PiacereViaggio = NEW.PiacereViaggio, 	Comportamento = NEW.Comportamento, Serieta = NEW.Serieta;
 END $$
+
+
+
+CREATE TRIGGER verifica_immissione
+BEFORE INSERT ON CorsieDiImmissione
+FOR EACH ROW
+BEGIN
+	IF NEW.CodStrada1 = NEW.CodStrada2 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Le trade non possono essere uguali!';
+	END IF;
+END $$
+
+
+
+
+CREATE TRIGGER verifica_limite_di_velocita
+BEFORE INSERT ON LimitiDiVelocita FOR EACH ROW
+BEGIN
+	IF (NEW.kmFine <= NEW.kmInizio) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Chilometri non validi!';
+	END IF;
+    
+    IF  ((NEW.ValoreLimite < 10) OR (NEW.ValoreLimite > 130) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Valore Limite di velocità non valido';
+	END IF;
+    
+    SET @chilometri = (SELECT Lunghezza
+						FROM Strada
+						WHERE CodStrada = NEW.CodStrada);
+	
+    IF( (NEW.kmFine > @chilometri) OR (NEW.kmInizio > @chilometri) OR (NEW.kmFine < 0) OR (NEW.kmInizio <0) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Immettere un chilometro valido';
+	END IF;
+    
+END $$
+
+
+CREATE TRIGGER controlla_posizione_arrivo_sharing
+BEFORE INSERT ON PosizioneArrivoSharing FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
  
+ 
+ CREATE TRIGGER controlla_posizione_partenza_sharing
+BEFORE INSERT ON PosizionePartenzaSharing FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+
+CREATE TRIGGER controllo_stelle__fruitore_noleggio
+BEFORE INSERT ON StelleFruitoreNoleggio FOR EACH ROW
+BEGIN
+
+	IF(NEW.Persona > 5 OR NEW.Persona < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Comportamento > 5 OR NEW.Comportamento < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.PiacereViaggio > 5 OR NEW.PiacereViaggio < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Serieta > 5 OR NEW.Serieta < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+        
+	END IF;
+
+END $$ 
+
+CREATE TRIGGER controllo_stelle_proponente_noleggio
+BEFORE INSERT ON StelleProponenteNoleggio FOR EACH ROW
+BEGIN
+
+	IF(NEW.Persona > 5 OR NEW.Persona < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Comportamento > 5 OR NEW.Comportamento < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.PiacereViaggio > 5 OR NEW.PiacereViaggio < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Serieta > 5 OR NEW.Serieta < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+        
+	END IF;
+
+END $$
+
+CREATE TRIGGER archivia_prenotazioni_di_noleggio
+AFTER UPDATE ON PrenotazioneDiNoleggio FOR EACH ROW
+
+BEGIN
+	IF(NEW.Stato = 'CHIUSO') THEN
+		INSERT ArchivioPrenotazioniVecchie
+		SET CodNoleggio = NEW.CodNoleggio, DataInizio = NEW.DataInizio, DataFine = NEW.DataFine, IdFruitore 		= NEW.IdFruitore, Targa = NEW.Targa, IdProponente = NEW.IdProponente;
+	END IF;
+    
+    IF(NEW.Stato = 'RIFIUTATO') THEN
+		INSERT ArchivioPrenotazioniRifiutate
+		SET CodNoleggio = NEW.CodNoleggio, IdFruitore = NEW.IdFruitore, Targa = NEW.Targa, IdProponente = 		 NEW.IdProponente;
+	END IF;
+END $$
+	
+
+CREATE TRIGGER controllo_sinistro_noleggio		#TODO: inserire caratteristiche auto 
+BEFORE INSERT ON SinistroNoleggio FOR EACH ROW
+
+BEGIN
+	IF(NEW.Orario > current_timestamp()) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire orario valido';
+	END IF;
+    
+    SET @strada = (SELECT CodStrada
+					FROM Strada
+                    WHERE CodStrada = NEW.CodStrada);
+                    
+	 SET @chilometro = (SELECT Lunghezza
+						FROM Strada
+						WHERE CodStrada = NEW.CodStrada);
+                    
+	IF( (@strada = NULL) OR (NEW.kmStrada < 0) OR (NEW.kmStrada > @chilometro) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire strada valida';
+	END IF;
+    
+    
+    IF( (NEW.PercentualeDiResponsabilita < 0) OR (NEW.PercentualeDiResponsabilita > 100) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire percentuale valida';
+	END IF;
+END $$
+
+
+CREATE TRIGGER controllo_generalita_sinistro_noleggio
+BEFORE INSERT ON GeneralitaSinistroNoleggio FOR EACH ROW
+
+BEGIN
+	SET @numDocumento = (SELECT NumDocumento
+						 FROM Documento D
+							JOIN Utente U ON D.Id = U.Id
+						 WHERE NEW.NumDocumento = NumDocumento);
+                         
+	IF((@numDocumento = NULL) OR (@numDocumento <> NEW.NumDocumento) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Documento inserito non valido';
+	END IF;
+    
+    SET @codFiscale = (SELECT CodFiscale
+						FROM Utente U
+							JOIN Documento D ON U.Id = D.Id
+						WHERE NumDocumento = NEW.NumDocumento);
+                        
+	IF(@codFiscale = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+END$$
+
+
+CREATE TRIGGER aggiungi_documento_sinistro_noleggio		#inserite le generalità di un utente inserisce 
+													    # il suo documento
+AFTER INSERT ON GeneralitaSinistroNoleggio FOR EACH ROW
+
+BEGIN
+	INSERT DocumentoDiIdentitaSinistroNoleggio
+    SELECT NumDocumento, Tipologia, Scadenza, EnteRilascio
+    FROM Documento
+	WHERE NumDocumento = NEW.NumDocumento;
+    
+END $$
+ 
+ 
+
+
  DELIMITER ;
 
 /*INSERT*/
@@ -1036,20 +1213,9 @@ INSERT INTO Utente ( Password, Indirizzo, Cognome, Nome,CodFiscale) VALUES('root
 INSERT INTO Documento VALUES ('AX964319', '1', 'Carta di identità', '2020-02-10', 'Comune');
 INSERT INTO Documento VALUES ('AE162249', '2', 'Carta di identità', '2023-03-01', 'Comune'); 
 
--- VALUTAZIONE UTENTE
-/*INSERT INTO ValutazioneUtente(Id, Ruolo, Recensione) VALUES ('1', 'fruitore', 'Bravino');
-INSERT INTO `progetto`.`valutazioneutente` (`Id`, `Ruolo`, `Recensione`) VALUES ('1', 'fruitore', 'Insomma');
-INSERT INTO `progetto`.`valutazioneutente` (`Id`, `Ruolo`, `Recensione`) VALUES ('1', 'fruitore', 'Bravissimo');
-INSERT INTO `progetto`.`valutazioneutente` (`CodVoto`, `Id`, `Ruolo`, `Recensione`) VALUES ('4', '1', 'fruitore', 'scemo di merda');*/
-
--- STELLE UTENTE
-  /*INSERT INTO StelleUtente VALUES ('1','1', '3', '3', '3', '3');
-  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('2', '1', '1', '1', '2', '1');
-  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('3', '1', '2', '1', '1', '2');
-  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('4', '1', '2', '4', '5', '1');*/
-
 -- AUTO
 INSERT INTO Auto VALUES('AE987CB', '2', '0', '1', '0');
+INSERT INTO `progetto`.`auto` (`Targa`, `Id`, `ServizioCarSharing`) VALUES ('AX123AB', '2', '1');
 
 
 -- SHARING MULTIPLO
@@ -1068,8 +1234,9 @@ INSERT INTO Strada(Tipologia, ClassificazioneTecnica, Lunghezza) VALUES ('statal
 -- CORSIE DI IMMISSIONE
 INSERT INTO CorsieDiImmissione(CodStrada1, CodStrada2, kmStrada1, kmStrada2) VALUES ('1', '2', '10', '20');
 -- LIMITI DI VELOCITA'
-INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('40','1','20', '1');
-INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('80','1','40', '2');
+INSERT INTO `progetto`.`limitidivelocita` (`ValoreLimite`, `kmFine`, `kmInizio`, `CodStrada`) VALUES ('50', '20', '1', '1');
+INSERT INTO `progetto`.`limitidivelocita` (`ValoreLimite`, `kmFine`,`kmInizio`, `CodStrada`) VALUES ('30', '40','1', '2');
+
 
 -- CAR SHARING
 INSERT INTO PrenotazioneDiNoleggio (DataInizio, DataFine, idFruitore, Targa, idProponente) VALUES ('2019-01-01', '2019-01-01', '1', 'AE987CB', '2');
@@ -1092,9 +1259,6 @@ INSERT INTO `progetto`.`stellefruitorenoleggio` (`CodVoto`, `Id`, `Persona`, `Pi
 INSERT INTO ValutazioneProponenteNoleggio (IdProponente, IdFruitore,Recensione) VALUES ('1', '2', 'Ottimo');
 -- STELLE PROPONENTE NOLEGGIO
 INSERT INTO StelleProponenteNoleggio VALUES( '1', '3','3','3','3');
--- ARCHIVIO
-INSERT INTO ArchivioPrenotazioniRifiutate VALUES('2','1','AE987CB');
-INSERT INTO ArchivioPrenotazioniVecchie VALUES('1','2018-01-01', '2018-01-01', '1', 'AE987CB', '2');
 -- TRAGITTO NOLEGGIO
 INSERT INTO TragittoNoleggio(kmPercorsi) VALUES ('20');
 -- POSIZIONE NOLEGGIO
@@ -1102,3 +1266,7 @@ INSERT INTO PosizioneArrivoNoleggio VALUES ('1','10');
 INSERT INTO PosizionePartenzaNoleggio VALUES ('1', '1');
 -- TRACKING NOLEGGIO
 INSERT INTO TrackingNoleggio VALUES( 'AE987CB', '1','root','4','2017-02-02 12:33:33');
+-- SINISTR0 NOLEGGIO
+INSERT INTO `progetto`.`sinistronoleggio` (`Modello`, `CasaAutomobilistica`, `TargaVeicoloProponente`, `Orario`, `CodStrada`, `KmStrada`, `Dinamica`, `PercentualeDiResponsabilita`) VALUES ('Panamera', 'Porsche', 'AE987CB', '2017-01-10 10:31:33', '1', '5', 'Na botta assurda', '10');
+
+INSERT INTO GeneralitaSinistroNoleggio VALUES ('AX964319', 'PGGLRD98E28C309F', 'Poggiani', 'Leonardo','Via Strada di Salci 46', '345344660');
