@@ -72,7 +72,7 @@ BEGIN
     
 END $$ 
 		
-CREATE TRIGGER controlla_posizione_partenza
+CREATE TRIGGER controlla_posizione_partenza_noleggio
 BEFORE INSERT ON PosizionePartenzaNoleggio FOR EACH ROW
 
 BEGIN
@@ -87,7 +87,7 @@ BEGIN
     
 END $$
 
-CREATE TRIGGER controlla_posizione_arrivo
+CREATE TRIGGER controlla_posizione_arrivo_noleggio
 BEFORE INSERT ON PosizioneArrivoNoleggio FOR EACH ROW
 
 BEGIN
@@ -152,7 +152,7 @@ BEGIN
 	END IF;
 	
     SET @ruolo = (SELECT Ruolo 
-				FROM Utene
+				FROM Utente
 				WHERE Id = NEW.IdProponente);
                 
 	IF(@ruolo <> 'Proponente') THEN
@@ -162,36 +162,6 @@ BEGIN
     
 END $$
 
-
-DROP TRIGGER IF EXISTS verifica_immissione $$
-CREATE TRIGGER verifica_immissione
-AFTER INSERT ON CorsieDiImmissione
-FOR EACH ROW
-BEGIN
-	IF NEW.CodStrada1 = NEW.CodStrada2 THEN
-		SIGNAL SQLSTATE '45000'
-		SET MESSAGE_TEXT = 'Errore. Le trade non possono essere uguali!';
-	END IF;
-END $$
-
-
-
-DROP TRIGGER IF EXISTS verifica_limite_di_velocita $$
-CREATE TRIGGER verifica_limite_di_velocita
-AFTER INSERT ON LimitiDiVelocita
-FOR EACH ROW
-BEGIN
-	IF NEW.kmFine = NEW.kmInizio THEN
-		SIGNAL SQLSTATE '45000'
-		SET MESSAGE_TEXT = 'Errore. Chilometri non validi!';
-	END IF;
-    
-    IF ValoreLimite%10 <> 0 OR ValoreLimite < 10 OR ValoreLimite > 130 THEN
-		SIGNAL SQLSTATE '45000'
-		SET MESSAGE_TEXT = 'Errore. Valore Limite di velocità non valido';
-	END IF;
-    
-END $$
 
 CREATE TRIGGER aggiorna_ruolo
 AFTER INSERT ON Auto FOR EACH ROW
@@ -225,5 +195,211 @@ BEGIN
     SET CodVoto = NEW.CodVoto, Id = NEW.Id, Persona = NEW.Persona, PiacereViaggio = NEW.PiacereViaggio, 	Comportamento = NEW.Comportamento, Serieta = NEW.Serieta;
 END $$
 
-DELIMITER ;
+
+
+CREATE TRIGGER verifica_immissione
+BEFORE INSERT ON CorsieDiImmissione
+FOR EACH ROW
+BEGIN
+	IF NEW.CodStrada1 = NEW.CodStrada2 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Le trade non possono essere uguali!';
+	END IF;
+END $$
+
+
+
+
+CREATE TRIGGER verifica_limite_di_velocita
+BEFORE INSERT ON LimitiDiVelocita FOR EACH ROW
+BEGIN
+	IF (NEW.kmFine <= NEW.kmInizio) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Chilometri non validi!';
+	END IF;
+    
+    IF  ((NEW.ValoreLimite < 10) OR (NEW.ValoreLimite > 130) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Valore Limite di velocità non valido';
+	END IF;
+    
+    SET @chilometri = (SELECT Lunghezza
+						FROM Strada
+						WHERE CodStrada = NEW.CodStrada);
 	
+    IF( (NEW.kmFine > @chilometri) OR (NEW.kmInizio > @chilometri) OR (NEW.kmFine < 0) OR (NEW.kmInizio <0) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Immettere un chilometro valido';
+	END IF;
+    
+END $$
+
+
+CREATE TRIGGER controlla_posizione_arrivo_sharing
+BEFORE INSERT ON PosizioneArrivoSharing FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+ 
+ 
+ CREATE TRIGGER controlla_posizione_partenza_sharing
+BEFORE INSERT ON PosizionePartenzaSharing FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+
+CREATE TRIGGER controllo_stelle__fruitore_noleggio
+BEFORE INSERT ON StelleFruitoreNoleggio FOR EACH ROW
+BEGIN
+
+	IF(NEW.Persona > 5 OR NEW.Persona < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Comportamento > 5 OR NEW.Comportamento < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.PiacereViaggio > 5 OR NEW.PiacereViaggio < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Serieta > 5 OR NEW.Serieta < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+        
+	END IF;
+
+END $$ 
+
+CREATE TRIGGER controllo_stelle_proponente_noleggio
+BEFORE INSERT ON StelleProponenteNoleggio FOR EACH ROW
+BEGIN
+
+	IF(NEW.Persona > 5 OR NEW.Persona < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Comportamento > 5 OR NEW.Comportamento < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.PiacereViaggio > 5 OR NEW.PiacereViaggio < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+	
+    ELSEIF(NEW.Serieta > 5 OR NEW.Serieta < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire voto valido';
+        
+	END IF;
+
+END $$
+
+CREATE TRIGGER archivia_prenotazioni_di_noleggio
+AFTER UPDATE ON PrenotazioneDiNoleggio FOR EACH ROW
+
+BEGIN
+	IF(NEW.Stato = 'CHIUSO') THEN
+		INSERT ArchivioPrenotazioniVecchie
+		SET CodNoleggio = NEW.CodNoleggio, DataInizio = NEW.DataInizio, DataFine = NEW.DataFine, IdFruitore 		= NEW.IdFruitore, Targa = NEW.Targa, IdProponente = NEW.IdProponente;
+	END IF;
+    
+    IF(NEW.Stato = 'RIFIUTATO') THEN
+		INSERT ArchivioPrenotazioniRifiutate
+		SET CodNoleggio = NEW.CodNoleggio, IdFruitore = NEW.IdFruitore, Targa = NEW.Targa, IdProponente = 		 NEW.IdProponente;
+	END IF;
+END $$
+	
+
+CREATE TRIGGER controllo_sinistro_noleggio		#TODO: inserire caratteristiche auto 
+BEFORE INSERT ON SinistroNoleggio FOR EACH ROW
+
+BEGIN
+	IF(NEW.Orario > current_timestamp()) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire orario valido';
+	END IF;
+    
+    SET @strada = (SELECT CodStrada
+					FROM Strada
+                    WHERE CodStrada = NEW.CodStrada);
+                    
+	 SET @chilometro = (SELECT Lunghezza
+						FROM Strada
+						WHERE CodStrada = NEW.CodStrada);
+                    
+	IF( (@strada = NULL) OR (NEW.kmStrada < 0) OR (NEW.kmStrada > @chilometro) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire strada valida';
+	END IF;
+    
+    
+    IF( (NEW.PercentualeDiResponsabilita < 0) OR (NEW.PercentualeDiResponsabilita > 100) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire percentuale valida';
+	END IF;
+END $$
+
+
+CREATE TRIGGER controllo_generalita_sinistro_noleggio
+BEFORE INSERT ON GeneralitaSinistroNoleggio FOR EACH ROW
+
+BEGIN
+	SET @numDocumento = (SELECT NumDocumento
+						 FROM Documento D
+							JOIN Utente U ON D.Id = U.Id
+						 WHERE NEW.NumDocumento = NumDocumento);
+                         
+	IF((@numDocumento = NULL) OR (@numDocumento <> NEW.NumDocumento) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Documento inserito non valido';
+	END IF;
+    
+    SET @codFiscale = (SELECT CodFiscale
+						FROM Utente U
+							JOIN Documento D ON U.Id = D.Id
+						WHERE NumDocumento = NEW.NumDocumento);
+                        
+	IF(@codFiscale = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+END$$
+
+
+CREATE TRIGGER aggiungi_documento_sinistro_noleggio		#inserisce le generalità di un utente inserisce 
+													    # il suo documento
+AFTER INSERT ON GeneralitaSinistroNoleggio FOR EACH ROW
+
+BEGIN
+	INSERT DocumentoDiIdentitaSinistroNoleggio
+    SELECT NumDocumento, Tipologia, Scadenza, EnteRilascio
+    FROM Documento
+	WHERE NumDocumento = NEW.NumDocumento;
+    
+END $$
+ 
+ 
+
+
+ DELIMITER ;
