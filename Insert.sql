@@ -7,20 +7,9 @@ INSERT INTO Utente ( Password, Indirizzo, Cognome, Nome,CodFiscale) VALUES('root
 INSERT INTO Documento VALUES ('AX964319', '1', 'Carta di identità', '2020-02-10', 'Comune');
 INSERT INTO Documento VALUES ('AE162249', '2', 'Carta di identità', '2023-03-01', 'Comune'); 
 
--- VALUTAZIONE UTENTE
-/*INSERT INTO ValutazioneUtente(Id, Ruolo, Recensione) VALUES ('1', 'fruitore', 'Bravino');
-INSERT INTO `progetto`.`valutazioneutente` (`Id`, `Ruolo`, `Recensione`) VALUES ('1', 'fruitore', 'Insomma');
-INSERT INTO `progetto`.`valutazioneutente` (`Id`, `Ruolo`, `Recensione`) VALUES ('1', 'fruitore', 'Bravissimo');
-INSERT INTO `progetto`.`valutazioneutente` (`CodVoto`, `Id`, `Ruolo`, `Recensione`) VALUES ('4', '1', 'fruitore', 'scemo di merda');*/
-
--- STELLE UTENTE
-  /*INSERT INTO StelleUtente VALUES ('1','1', '3', '3', '3', '3');
-  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('2', '1', '1', '1', '2', '1');
-  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('3', '1', '2', '1', '1', '2');
-  INSERT INTO `progetto`.`stelleutente` (`CodVoto`, `Id`, `Persona`, `PiacereViaggio`, `Serieta`, `Comportamento`) VALUES ('4', '1', '2', '4', '5', '1');*/
-
 -- AUTO
 INSERT INTO Auto VALUES('AE987CB', '2', '0', '1', '0');
+INSERT INTO `progetto`.`auto` (`Targa`, `Id`, `ServizioCarSharing`) VALUES ('AX123AB', '2', '1');
 
 
 -- SHARING MULTIPLO
@@ -39,8 +28,9 @@ INSERT INTO Strada(Tipologia, ClassificazioneTecnica, Lunghezza) VALUES ('statal
 -- CORSIE DI IMMISSIONE
 INSERT INTO CorsieDiImmissione(CodStrada1, CodStrada2, kmStrada1, kmStrada2) VALUES ('1', '2', '10', '20');
 -- LIMITI DI VELOCITA'
-INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('40','1','20', '1');
-INSERT INTO LimitiDiVelocita (ValoreLimite, kmFine, kmInizio, CodStrada) VALUES ('80','1','40', '2');
+INSERT INTO `progetto`.`limitidivelocita` (`ValoreLimite`, `kmFine`, `kmInizio`, `CodStrada`) VALUES ('50', '20', '1', '1');
+INSERT INTO `progetto`.`limitidivelocita` (`ValoreLimite`, `kmFine`,`kmInizio`, `CodStrada`) VALUES ('30', '40','1', '2');
+
 
 -- CAR SHARING
 INSERT INTO PrenotazioneDiNoleggio (DataInizio, DataFine, idFruitore, Targa, idProponente) VALUES ('2019-01-01', '2019-01-01', '1', 'AE987CB', '2');
@@ -63,9 +53,6 @@ INSERT INTO `progetto`.`stellefruitorenoleggio` (`CodVoto`, `Id`, `Persona`, `Pi
 INSERT INTO ValutazioneProponenteNoleggio (IdProponente, IdFruitore,Recensione) VALUES ('1', '2', 'Ottimo');
 -- STELLE PROPONENTE NOLEGGIO
 INSERT INTO StelleProponenteNoleggio VALUES( '1', '3','3','3','3');
--- ARCHIVIO
-INSERT INTO ArchivioPrenotazioniRifiutate VALUES('2','1','AE987CB');
-INSERT INTO ArchivioPrenotazioniVecchie VALUES('1','2018-01-01', '2018-01-01', '1', 'AE987CB', '2');
 -- TRAGITTO NOLEGGIO
 INSERT INTO TragittoNoleggio(kmPercorsi) VALUES ('20');
 -- POSIZIONE NOLEGGIO
@@ -73,3 +60,7 @@ INSERT INTO PosizioneArrivoNoleggio VALUES ('1','10');
 INSERT INTO PosizionePartenzaNoleggio VALUES ('1', '1');
 -- TRACKING NOLEGGIO
 INSERT INTO TrackingNoleggio VALUES( 'AE987CB', '1','root','4','2017-02-02 12:33:33');
+-- SINISTR0 NOLEGGIO
+INSERT INTO `progetto`.`sinistronoleggio` (`Modello`, `CasaAutomobilistica`, `TargaVeicoloProponente`, `Orario`, `CodStrada`, `KmStrada`, `Dinamica`, `PercentualeDiResponsabilita`) VALUES ('Panamera', 'Porsche', 'AE987CB', '2017-01-10 10:31:33', '1', '5', 'Na botta assurda', '10');
+
+INSERT INTO GeneralitaSinistroNoleggio VALUES ('AX964319', 'PGGLRD98E28C309F', 'Poggiani', 'Leonardo','Via Strada di Salci 46', '345344660');
