@@ -191,6 +191,7 @@ CREATE TABLE PrenotazioneDiNoleggio
     IdFruitore INT NOT NULL,
     Targa VARCHAR(7) NOT NULL,
     IdProponente INT NOT NULL,
+    Stato ENUM ('ATTIVO', 'CHIUSO','RIFIUTATO') DEFAULT 'ATTIVO',
         PRIMARY KEY(CodNoleggio),
         FOREIGN KEY (IdProponente)
         REFERENCES Utente(Id)
@@ -257,69 +258,68 @@ CREATE TABLE Auto
 
 
 
-CREATE TABLE StelleProponenteNoleggio
-(
-CodVoto INT NOT NULL,
-Persona DOUBLE NOT NULL,
-PiacereDiViaggio DOUBLE NOT NULL,
-Comportamento DOUBLE NOT NULL,
-Serieta DOUBLE NOT NULL,
+CREATE TABLE StelleProponenteNoleggio (
+    CodVoto INT NOT NULL,
+    Persona DOUBLE NOT NULL,
+    PiacereViaggio DOUBLE NOT NULL,
+    Comportamento DOUBLE NOT NULL,
+    Serieta DOUBLE NOT NULL,
     PRIMARY KEY (CodVoto),
     FOREIGN KEY (CodVoto)
-    REFERENCES ValutazioneProponenteNoleggio(CodVoto)
+        REFERENCES ValutazioneProponenteNoleggio (CodVoto)
 );
 
 
 
-CREATE TABLE ArchivioPrenotazioniRifiutate
-(
-CodNoleggio INT NOT NULL  AUTO_INCREMENT,
-Id INT NOT NULL,
-Targa VARCHAR(7) NOT NULL,
+CREATE TABLE ArchivioPrenotazioniRifiutate (
+    CodNoleggio INT NOT NULL,
+    IdFruitore INT NOT NULL,
+    IdProponente INT NOT NULL,
+    Targa VARCHAR(7) NOT NULL,
     PRIMARY KEY (CodNoleggio),
-    FOREIGN KEY (Id)
-    REFERENCES Utente(Id)
+    FOREIGN KEY (IdFruitore)
+        REFERENCES Utente (Id),
+	FOREIGN KEY (IdProponente)
+		REFERENCES Utente(Id)
 );
 
 
-CREATE TABLE ArchivioPrenotazioniVecchie
-(
-CodNoleggio INT NOT NULL  AUTO_INCREMENT,
-DataInizio DATE NOT NULL,
-DataFine DATE NOT NULL,
-IdFruitore INT NOT NULL,
-Targa VARCHAR(7) NOT NULL,
-IdProponente INT NOT NULL,
-    PRIMARY KEY (CodNoleggio)    
+CREATE TABLE ArchivioPrenotazioniVecchie (
+    CodNoleggio INT NOT NULL,
+    DataInizio DATE NOT NULL,
+    DataFine DATE NOT NULL,
+    IdFruitore INT NOT NULL,
+    Targa VARCHAR(7) NOT NULL,
+    IdProponente INT NOT NULL,
+    PRIMARY KEY (CodNoleggio)
 );
 
 
 
-CREATE TABLE TragittoNoleggio(
-CodTragitto INT NOT NULL auto_increment,
-KmPercorsi DOUBLE NOT NULL,
+CREATE TABLE TragittoNoleggio (
+    CodTragitto INT NOT NULL AUTO_INCREMENT,
+    KmPercorsi DOUBLE NOT NULL,
     PRIMARY KEY (CodTragitto)
 );
 
 
 
-CREATE TABLE PosizioneArrivoNoleggio
-(
-CodStrada INT NOT NULL  AUTO_INCREMENT,
-NumChilometro INT NOT NULL,
+CREATE TABLE PosizioneArrivoNoleggio (
+    CodStrada INT NOT NULL AUTO_INCREMENT,
+    NumChilometro INT NOT NULL,
     PRIMARY KEY (CodStrada),
     FOREIGN KEY (CodStrada)
-    REFERENCES Strada(CodStrada )
+        REFERENCES Strada (CodStrada)
 );
 
 
 CREATE TABLE PosizionePartenzaNoleggio (
-CodStrada INT NOT NULL,
-NumChilometro DOUBLE NOT NULL,
-    PRIMARY KEY(CodStrada),
+    CodStrada INT NOT NULL,
+    NumChilometro DOUBLE NOT NULL,
+    PRIMARY KEY (CodStrada),
     FOREIGN KEY (CodStrada)
-    REFERENCES Strada(CodStrada)
-    ON DELETE CASCADE
+        REFERENCES Strada (CodStrada)
+        ON DELETE CASCADE
 );
 
 
@@ -347,23 +347,24 @@ CREATE TABLE SinistroNoleggio
     Modello  VARCHAR(24) NOT NULL,
     CasaAutomobilistica VARCHAR(24) NOT NULL,
     TargaVeicoloProponente VARCHAR(7) NOT NULL,
-    Orario TIMESTAMP NOT NULL,    -- ?
+    Orario TIMESTAMP NOT NULL, 
+    CodStrada INT NOT NULL,
     KmStrada INT NOT NULL,
     Dinamica VARCHAR(200) NOT NULL,
-    PercentualeDiResponsabilità INT NOT NULL,
+    PercentualeDiResponsabilita INT NOT NULL,
         PRIMARY KEY (CodSinistro),
         FOREIGN KEY (TargaVeicoloProponente)
         REFERENCES     Auto(Targa)
 );
 
 
-CREATE TABLE GeneralitàSinistroNoleggio
+CREATE TABLE GeneralitaSinistroNoleggio
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
-    Congome VARCHAR(24) NOT NULL,
-    Nome VARCHAR(24) NOT NULL,
-    Indizirro VARCHAR(24) NOT NULL,
+    Cognome VARCHAR(40) NOT NULL,
+    Nome VARCHAR(40) NOT NULL,
+    Indirizzo VARCHAR(40) NOT NULL,
     NumTelefono INT NOT NULL,
         PRIMARY KEY (NumDocumento),
         FOREIGN KEY (NumDocumento)
@@ -371,12 +372,12 @@ CREATE TABLE GeneralitàSinistroNoleggio
 );
 
 
-CREATE TABLE DocumentoDiIdentitàSinistroNoleggio
+CREATE TABLE DocumentoDiIdentitaSinistroNoleggio
 (
     NumDocumento VARCHAR (9) NOT NULL,
     Tipologia VARCHAR(24) NOT NULL,
     Scadenza DATE NOT NULL,
-    Ente VARCHAR(24) NOT NULL,
+    EnteRilascio VARCHAR(24) NOT NULL,
         PRIMARY KEY (NumDocumento),
         FOREIGN KEY (NumDocumento)
         REFERENCES Documento(NumDocumento)
@@ -440,35 +441,35 @@ CREATE TABLE SinistroPool
     Orario TIMESTAMP NOT NULL,    
     KmStrada INT NOT NULL,
     Dinamica VARCHAR(200) NOT NULL,
-    PercentualeDiResponsabilità INT NOT NULL,
+    PercentualeDiResponsabilita INT NOT NULL,
         PRIMARY KEY (CodSinistro),
         FOREIGN KEY (TargaVeicoloProponente)
         REFERENCES Auto(Targa)
 );
 
 
-CREATE TABLE GeneralitàSinistroPool
+CREATE TABLE GeneralitaSinistroPool
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
-    Congome VARCHAR(24) NOT NULL,
+    Cognome VARCHAR(24) NOT NULL,
     Nome VARCHAR(24) NOT NULL,
-    Indizirro VARCHAR(24) NOT NULL,
+    Indirizzo VARCHAR(24) NOT NULL,
     NumTelefono INT NOT NULL,
-        PRIMARY KEY (NumDocumento),
+        PRIMARY KEY (NumDocumento, CodFiscale),
         FOREIGN KEY (NumDocumento)
         REFERENCES Documento(NumDocumento)
 );
 
 
 
-CREATE TABLE DocumentoDiIdentitàSinistroPool
+CREATE TABLE DocumentoDiIdentitaSinistroPool
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
-    Congome VARCHAR(24) NOT NULL,
+    Cognome VARCHAR(24) NOT NULL,
     Nome VARCHAR(24) NOT NULL,
-    Indizirro VARCHAR(24) NOT NULL,
+    Indirizzo VARCHAR(24) NOT NULL,
     NumTelefono INT NOT NULL,
         PRIMARY KEY (NumDocumento),
         FOREIGN KEY (NumDocumento)
@@ -509,7 +510,7 @@ CREATE TABLE SommaCostiAttuale
 CREATE TABLE ArchivioPoolVecchi 
 (
     CodPool INT NOT NULL,    
-    GradoDIFlessibilita ENUM ('BASSO', 'MEDIO', 'ALTO'),
+    GradoDiFlessibilita ENUM ('BASSO', 'MEDIO', 'ALTO'),
     GiornoDiArrivo TIMESTAMP NOT NULL,
     GiornoDiPartenza TIMESTAMP NOT NULL,
     OrarioDiPartenza TIMESTAMP NOT NULL,
@@ -527,9 +528,9 @@ CREATE TABLE SommaCostiVecchiaPool
     CostoCarburante DOUBLE NOT NULL,
     CostoOperativo DOUBLE NOT NULL,
     CostoUsura DOUBLE NOT NULL,
-    ConsumeUrbano DOUBLE NOT NULL,
+    ConsumoUrbano DOUBLE NOT NULL,
     ConsumoExtraUrbano DOUBLE NOT NULL,
-    CosnumoMisto DOUBLE NOT NULL,
+    ConsumoMisto DOUBLE NOT NULL,
         PRIMARY KEY (CodPool),
         FOREIGN KEY (CodPool)
         REFERENCES Pool(CodPool)
@@ -754,7 +755,7 @@ CREATE TABLE SinistroSharing
 
 
 
-CREATE TABLE GeneralitàSinistroSharing 
+CREATE TABLE GeneralitaSinistroSharing 
 (
     NumDocumento VARCHAR (9) NOT NULL,
     CodFiscale VARCHAR(16) NOT NULL,
@@ -769,7 +770,7 @@ CREATE TABLE GeneralitàSinistroSharing
 
 
 
-CREATE TABLE DocumentoDiIdentitàSinistroSharing 
+CREATE TABLE DocumentoDiIdentitaSinistroSharing 
 (
     NumDocumento VARCHAR (9) NOT NULL,
     Tipologia VARCHAR(24) NOT NULL,
