@@ -977,6 +977,37 @@ BEGIN
 	END IF;
 END $$
 
+DROP TRIGGER IF EXISTS verifica_immissione $$
+CREATE TRIGGER verifica_immissione
+AFTER INSERT ON CorsieDiImmissione
+FOR EACH ROW
+BEGIN
+	IF NEW.CodStrada1 = NEW.CodStrada2 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Le trade non possono essere uguali!';
+	END IF;
+END $$
+
+
+
+DROP TRIGGER IF EXISTS verifica_limite_di_velocita $$
+CREATE TRIGGER verifica_limite_di_velocita
+AFTER INSERT ON LimitiDiVelocita
+FOR EACH ROW
+BEGIN
+	IF NEW.kmFine = NEW.kmInizio THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Chilometri non validi!';
+	END IF;
+    
+    IF ValoreLimite%10 <> 0 OR ValoreLimite < 10 OR ValoreLimite > 130 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Valore Limite di velocità non valido';
+	END IF;
+    
+END $$
+	   
+	   
 CREATE TRIGGER aggiungi_voto #aggiunge automaticamente i voti dei noleggi
 AFTER INSERT ON ValutazioneFruitoreNoleggio FOR EACH ROW
 
