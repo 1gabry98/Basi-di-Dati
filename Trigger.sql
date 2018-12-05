@@ -165,6 +165,16 @@ BEGIN
 		SET MESSAGE_TEXT = 'Inserire prezzo valido';
 	END IF;
     
+     SET @auto = (SELECT Targa
+					FROM Utente U 
+						JOIN Auto A ON U.Id = A.Id
+					WHERE NEW.Targa = Targa);
+                    
+	IF(@auto = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Nessuna auto registrata per questo utente';
+	END IF;
+    
 END $$
 
 
@@ -765,5 +775,16 @@ BEGIN
     WHERE Targa = NEW.Targa;
 END $$
 
+CREATE TRIGGER aggiorna_stato_utente_dopo_eliminazione_auto
+AFTER DELETE ON Auto FOR EACH ROW
 
+BEGIN
+	SET @autorimanenti = (SELECT COUNT*
+							FROM Auto 
+                            WHERE Id = NEW.Id);
+	IF(@autorimanenti = 0) THEN
+		UPDATE Utente
+        SET Ruolo = 'Fruitore'
+        WHERE Id = NEW.Id;
+END;
 DELIMITER ;
