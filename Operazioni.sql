@@ -37,4 +37,33 @@ BEGIN
 		INSERT INTO Documento(NumDocumento, Id, Tipologia, Scadenza, EnteRilascio) VALUES (_numdocumento, idutente, _tipologia, _scadenza, _enterilascio);
     END IF;
  END $$
+
+
+-- ELIMINAZIONE DI UN UTENTE
+
+CREATE PROCEDURE EliminazioneUtente(IN _id INT)
+BEGIN
+	
+    DECLARE esiste INT DEFAULT 0;
+    DECLARE idutente INT DEFAULT 0;
+    
+    -- Verifico se l'utente già esiste
+    SET esiste =	(
+	    			SELECT 	COUNT(*)
+				FROM 	Utente U
+				WHERE	U.Id = _id
+			);
+    
+    IF esiste = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Utente non esistente';
+	ELSEIF esiste = 1 THEN
+		DELETE FROM Utente WHERE Id = _id;
+        	DELETE FROM Documento WHERE Id = _id;
+		DELETE FROM Auto WHERE Id = _id;
+	END IF;
+END $$
+
+
+
 DELIMITER ;
