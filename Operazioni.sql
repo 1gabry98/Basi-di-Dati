@@ -86,8 +86,8 @@ BEGIN
 		SIGNAL SQLSTATE '45000'
 		SET MESSAGE_TEXT = 'Errore. Auto non esistente';
 	ELSEIF esiste = 1 THEN
-		SELECT	C.*, CM.Urbano AS ConsumoUrbano, CM.ExtraUrbano AS ConsumoExtraUrbano, CM.Misto AS ConsumoMisto
-		FROM	ConsumoMedio CM NATURAL JOIN Caratteristiche C;
+		SELECT	C.*, O.Peso, O.Connettività, O.Tavolino, O.TettoInVetro, O.Bagagliaio, O.ValutazioneAuto, O.RumoreMedio, CM.Urbano AS ConsumoUrbano, CM.ExtraUrbano AS ConsumoExtraUrbano, CM.Misto AS ConsumoMisto
+		FROM	(ConsumoMedio CM NATURAL JOIN Caratteristiche C) NATURAL JOIN Optional O;
 	END IF;
 END $$
 
