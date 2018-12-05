@@ -40,7 +40,7 @@ BEGIN
 
 
 -- ELIMINAZIONE DI UN UTENTE
-
+DROP PROCEDURE IF EXISTS EliminazioneUtente $$
 CREATE PROCEDURE EliminazioneUtente(IN _id INT)
 BEGIN
 	
@@ -59,6 +59,7 @@ BEGIN
 		SET MESSAGE_TEXT = 'Errore. Utente non esistente';
 	ELSEIF esiste = 1 THEN
 		DELETE FROM Utente WHERE Id = _id;
+		DELETE FROM ValutazioneUtente WHERE Id = _id;
         	DELETE FROM Documento WHERE Id = _id;
 		DELETE FROM Auto WHERE Id = _id;
 	END IF;
