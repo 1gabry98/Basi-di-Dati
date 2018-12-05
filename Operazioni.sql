@@ -89,6 +89,49 @@ BEGIN
 	END IF;
 END $$
 
+-- REGISTRAZIONE NUOVA AUTO
 
+DROP PROCEDURE IF EXISTS RegistrazioneAuto $$
+CREATE PROCEDURE RegistrazioneAuto	(
+										IN _targa INT,
+										IN _id INT, 
+										IN _NumPosti INT,
+										IN _VelocitàMax DOUBLE,
+										IN _AnnoImmatricolazione INT,
+										IN _Alimentazione VARCHAR(29),
+                                        IN _Modello VARCHAR(29), 
+										IN _CasaProduttrice VARCHAR(29), 
+										IN _KmPercorsi  DOUBLE,
+                                        IN _QuantitàCarburante DOUBLE,
+                                        IN _CostoUsura DOUBLE,
+                                        IN _Peso DOUBLE,
+                                        IN _Connettività BOOL,
+                                        IN _Tavolino BOOL,
+                                        IN _TettoInVetro BOOL,
+                                        IN _Bagagliaio DOUBLE,
+                                        IN _ValutazioneAuto DOUBLE,
+                                        IN _RumoreMedio DOUBLE
+									)
+BEGIN
+	
+    DECLARE esiste INT DEFAULT 0;
+    
+    -- Verifico se l'utente già esiste
+    SET esiste =	(
+						SELECT 	COUNT(*)
+						FROM 	Auto A
+						WHERE	A.Targa = _targa
+					);
+    
+    IF esiste = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Auto non esistente';
+	ELSEIF esiste = 1 THEN
+		INSERT INTO Auto(Targa, Id) VALUES (_targa, _id);
+        INSERT INTO Caratteristiche(Targa, NumPosti, VelocitàMax, AnnoImmatricolazione, Alimentazione, Cilindrata, Modello, CasaProduttrice) VALUES (_targa, _NumPosti, _VelocitàMax, _AnnoImmatricolazione, _Alimentazione, _Cilindrata, _Modello, _CasaProduttrice);
+        INSERT INTO StatoIniziale(Targa, KmPercorsi, QuantitàCarburante, CostoUsura) VALUES (_targa, _KmPercorsi, _QuantitàCarburante, _CostoUsura);
+        INSERT INTO Optional(Targa, Peso, Connettività, Tavolino, TettoInVetro, Bagagliaio, ValutazioneAuto, RumoreMedio) VALUES (_targa, _Peso, _Connettività, _Tavolino, _TettoInVetro, _Bagagliaio, _ValutazioneAuto, _RumoreMedio);
+	END IF;
+END $$
 
 DELIMITER ;
