@@ -1636,7 +1636,32 @@ BEGIN
     END IF;
  END $$
 
+-- VISUALIZZAZIONE CARATTERISTICHE AUTO
 
+DROP PROCEDURE IF EXISTS CaratteristicheAuto $$
+CREATE PROCEDURE CaratteristicheAuto(IN _targa INT)
+BEGIN
+	
+    DECLARE esiste INT DEFAULT 0;
+    
+    -- Verifico se l'utente già esiste
+    SET esiste =(
+			SELECT 	COUNT(*)
+			FROM 	Auto A
+			WHERE	A.Targa = _targa
+		);
+    
+    IF esiste = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Auto non esistente';
+	ELSEIF esiste = 1 THEN
+		SELECT	C.*, O.Peso, O.Connettività, O.Tavolino, O.TettoInVetro, O.Bagagliaio, O.ValutazioneAuto, O.RumoreMedio, CM.Urbano AS ConsumoUrbano, CM.ExtraUrbano AS ConsumoExtraUrbano, CM.Misto AS ConsumoMisto
+		FROM	(ConsumoMedio CM NATURAL JOIN Caratteristiche C) NATURAL JOIN Optional O;
+	END IF;
+END $$
+					  
+					  
+					  
 -- ELIMINAZIONE DI UN UTENTE
 CREATE PROCEDURE EliminazioneUtente(IN _id INT)
 BEGIN
