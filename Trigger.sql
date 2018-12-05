@@ -160,6 +160,11 @@ BEGIN
 		SET MESSAGE_TEXT = 'Id associato ad un utente non proponente';
 	END IF;
     
+    IF(NEW.Prezzo < 0) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire prezzo valido';
+	END IF;
+    
 END $$
 
 
@@ -321,12 +326,18 @@ BEGIN
 	IF(NEW.Stato = 'CHIUSO') THEN
 		INSERT ArchivioPrenotazioniVecchie
 		SET CodNoleggio = NEW.CodNoleggio, DataInizio = NEW.DataInizio, DataFine = NEW.DataFine, IdFruitore 		= NEW.IdFruitore, Targa = NEW.Targa, IdProponente = NEW.IdProponente;
-	END IF;
+		DELETE FROM PrenotazioneDiNoleggio
+		WHERE CodNoleggio = NEW.CodNoleggio;
+    END IF;
     
     IF(NEW.Stato = 'RIFIUTATO') THEN
 		INSERT ArchivioPrenotazioniRifiutate
 		SET CodNoleggio = NEW.CodNoleggio, IdFruitore = NEW.IdFruitore, Targa = NEW.Targa, IdProponente = 		 NEW.IdProponente;
-	END IF;
+		DELETE FROM PrenotazioneDiNoleggio
+		WHERE CodNoleggio = NEW.CodNoleggio;
+    END IF;
+    
+    
 END $$
 	
 
@@ -387,7 +398,7 @@ BEGIN
 END$$
 
 
-CREATE TRIGGER aggiungi_documento_sinistro_noleggio		#inserisce le generalità di un utente inserisce 
+CREATE TRIGGER aggiungi_documento_sinistro_noleggio		#inserite le generalità di un utente inserisce 
 													    # il suo documento
 AFTER INSERT ON GeneralitaSinistroNoleggio FOR EACH ROW
 
@@ -399,7 +410,360 @@ BEGIN
     
 END $$
  
+CREATE TRIGGER controllo_pool
+BEFORE INSERT ON Pool FOR EACH ROW
+
+BEGIN
+	IF(NEW.GiornoArrivo < NEW.GiornoPartenza) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire un orario valido';
+	END IF;
+    
+    SET @proponente = (SELECT Id
+						FROM Utente
+						WHERE NEW.IdProponente = Id);
+                        
+	IF(@proponente = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente non trovato';
+	END IF;
+    
+    SET @ruolo = (SELECT Ruolo
+					FROM Utente
+					WHERE NEW.IdProponente = Id);
+	
+    
+    IF(@ruolo <> 'Proponente') THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non registrato come proponente';
+	END IF;
+    
+    SET @auto = (SELECT Targa
+					FROM Utente U 
+						JOIN Auto A ON U.Id = A.Id
+					WHERE NEW.Targa = Targa);
+                    
+	IF(@auto = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Nessuna auto registrata per questo utente';
+	END IF;
+    
+    IF((NEW.NumPosti < 0)OR (NEW.NumPosti > 9)) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire un numero di posti valido';
+	END IF;
+		
+END $$
+
+CREATE TRIGGER archivia_pool
+AFTER UPDATE ON Pool FOR EACH ROW
+
+BEGIN
+	IF(NEW.Stato = 'CHIUSO') THEN
+		INSERT ArchivioPoolVecchi
+        SET CodPool = NEW.CodPool, GradoFlessibilita = NEW.GradoFlessibilita, GiornoArrivo = NEW.GiornoArrivo, GiornoPartenza = NEW.GiornoPartenza, Targa = NEW.Targa, IdProponente = NEW.IdProponente;
+		DELETE FROM Pool
+		WHERE CodPool = NEW.CodPool;
+   END IF;
+    
+END$$
+
+
+CREATE TRIGGER controlla_posizione_arrivo_pool
+BEFORE INSERT ON PosizioneArrivoPool FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+
+
+CREATE TRIGGER controlla_posizione_partenza_pool
+BEFORE INSERT ON PosizionePartenzaPool FOR EACH ROW
+
+BEGIN
+	SET @km = (SELECT Lunghezza
+				FROM Strada
+                WHERE CodStrada = NEW.CodStrada );
+                
+	IF(NEW.numChilometro > @km) THEN 
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'numChilometro non valido';
+	END IF;
+    
+END $$
+
+CREATE TRIGGER controllo_sinistro_pool	#TODO: inserire caratteristiche auto 
+BEFORE INSERT ON SinistroPool FOR EACH ROW
+
+BEGIN
+	IF(NEW.Orario > current_timestamp()) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire orario valido';
+	END IF;
+    
+    SET @strada = (SELECT CodStrada
+					FROM Strada
+                    WHERE CodStrada = NEW.CodStrada);
+                    
+	 SET @chilometro = (SELECT Lunghezza
+						FROM Strada
+						WHERE CodStrada = NEW.CodStrada);
+                    
+	IF( (@strada = NULL) OR (NEW.kmStrada < 0) OR (NEW.kmStrada > @chilometro) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire strada valida';
+	END IF;
+    
+    
+    IF( (NEW.PercentualeDiResponsabilita < 0) OR (NEW.PercentualeDiResponsabilita > 100) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire percentuale valida';
+	END IF;
+END $$
+
+
+CREATE TRIGGER controllo_generalita_sinistro_pool
+BEFORE INSERT ON GeneralitaSinistroPool FOR EACH ROW
+
+BEGIN
+	SET @numDocumento = (SELECT NumDocumento
+						 FROM Documento D
+							JOIN Utente U ON D.Id = U.Id
+						 WHERE NEW.NumDocumento = NumDocumento);
+                         
+	IF((@numDocumento = NULL) OR (@numDocumento <> NEW.NumDocumento) ) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Documento inserito non valido';
+	END IF;
+    
+    SET @codFiscale = (SELECT CodFiscale
+						FROM Utente U
+							JOIN Documento D ON U.Id = D.Id
+						WHERE NumDocumento = NEW.NumDocumento);
+                        
+	IF(@codFiscale = NULL) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+END$$
+
+
+CREATE TRIGGER aggiungi_documento_sinistro_pool		#inserite le generalità di un utente inserisce 
+													    # il suo documento
+AFTER INSERT ON GeneralitaSinistroPool FOR EACH ROW
+
+BEGIN
+	INSERT DocumentoDiIdentitaSinistroPool
+    SELECT NumDocumento, Tipologia, Scadenza, EnteRilascio
+    FROM Documento
+	WHERE NumDocumento = NEW.NumDocumento;
+    
+END $$
+
+CREATE TRIGGER controlla_somma_costi
+BEFORE INSERT ON SommaCostiAttualePool FOR EACH ROW
+
+BEGIN
+	IF(NEW.ConsumoCarburante < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Inserire importo valido';
+	END IF;
+    
+    IF(NEW.CostoCarburante < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+    
+    IF(NEW.CostoOperativo < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+    IF(NEW.CostoUsura < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+    IF(NEW.ConsumoUrbano < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+    IF(NEW.ConsumoExtraurbano < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+    IF(NEW.ConsumoMisto < 0) THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Utente inserito non valido';
+	END IF;
+    
+END $$
  
 
+CREATE TRIGGER aggiungi_somma_costi_vecchia_pool
+AFTER INSERT ON ArchivioPoolVecchi FOR EACH ROW
 
- DELIMITER ;
+BEGIN
+	INSERT SommaCostiVecchiaPool
+    SELECT * 
+    WHERE CodPool = NEW.CodPool;
+END $$
+
+
+CREATE TRIGGER controlla_consumo_medio
+BEFORE INSERT ON ConsumoMedio FOR EACH ROW
+
+BEGIN
+			SET @targa = (SELECT Targa
+							FROM Auto
+							WHERE Targa = NEW.Targa);
+                            
+			IF(@targa = NULL) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Auto non presente nel db';
+			END IF;
+
+			IF(NEW.Urbano < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Importo inserito non valido';
+			END IF;
+            
+            IF(NEW.ExtraUrbano < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Importo inserito non valido';
+			END IF;
+            
+            IF(NEW.Misto < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Importo inserito non valido';
+			END IF;
+            
+END $$
+
+
+CREATE TRIGGER controlla_caratteristiche
+BEFORE INSERT ON Caratteristiche FOR EACH ROW 
+
+BEGIN
+			IF((NEW.NumPosti < 0) OR (NEW.NumPosti > 9)) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Inserire numero di posti valido';
+			END IF;
+            
+            SET @targa = (SELECT Targa
+							FROM Auto
+							WHERE Targa = NEW.Targa);
+                            
+			IF(@targa = NULL) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Auto non presente nel db';
+			END IF;
+            
+            IF ((NEW.VelocitaMax < 0) OR (NEW.VelocitaMax > 300)) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Velocità inserita non valida';
+			END IF;
+            
+            IF(NEW.AnnoImmatricolazione > current_timestamp() ) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Anno inserito non valido';
+			END IF;
+            
+            IF(NEW.Cilindrata < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Cilindrata inserita non valida';
+			END IF;
+END $$
+            
+CREATE TRIGGER controlla_stato_iniziale
+BEFORE INSERT ON StatoIniziale FOR EACH ROW
+
+BEGIN
+			SET @targa = (SELECT Targa
+							FROM Auto
+							WHERE Targa = NEW.Targa);
+                            
+			IF(@targa = NULL) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Auto non presente nel db';
+			END IF;
+            
+            IF(NEW.kmPercorsi < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Km non validi';
+			END IF;
+            
+            IF(NEW.QuantitaCarburante < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Carburante inserito non valido';
+			END IF;
+            
+            IF(NEW.CostoUsura < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'CostoUsura inserito non valido';
+			END IF;
+END $$
+
+CREATE TRIGGER controlla_optional
+BEFORE INSERT ON Optional FOR EACH ROW
+
+BEGIN
+			IF(NEW.Peso < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Peso inserito non valido';
+			END IF;
+            
+            IF(NEW.ValutazioneAuto < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'ValutazioneAuto inserita non valida';
+			END IF;
+            
+            IF(NEW.RumoreMedio < 0) THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'RumoreMedio inserito non valido';
+			END IF;
+            
+END $$
+
+
+CREATE TRIGGER aggiorna_servizio_car_sharing
+AFTER INSERT ON PrenotazioneDiNoleggio FOR EACH ROW
+
+BEGIN
+	UPDATE Auto
+    SET ServizioCarSharing = 1
+    WHERE Targa = NEW.Targa;
+END $$
+
+CREATE TRIGGER aggiorna_servizio_car_pooling
+AFTER INSERT ON Pool FOR EACH ROW
+
+BEGIN
+	UPDATE Auto
+    SET ServizioCarPooling = 1
+    WHERE Targa = NEW.Targa;
+END $$
+
+CREATE TRIGGER aggiorna_servizio_ride_sharing
+AFTER INSERT ON RideSharing FOR EACH ROW
+
+BEGIN
+	UPDATE Auto
+    SET ServizioRideSharing = 1
+    WHERE Targa = NEW.Targa;
+END $$
+
+
+DELIMITER ;
