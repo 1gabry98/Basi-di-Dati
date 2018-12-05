@@ -31,8 +31,8 @@ BEGIN
 		INSERT INTO Utente(Password, Ruolo, Indirizzo, Cognome, Nome, CodFiscale, MediaVoto) VALUES (_password, 'fruitore', _indirizzo, _cognome, _nome, _codficale, 0);
          
 		SELECT	Id INTO idutente
-        FROM 	Utente U
-        WHERE	U.CodFiscale = _codficale;
+       		FROM	Utente U
+    		WHERE	U.CodFiscale = _codficale;
          
 		INSERT INTO Documento(NumDocumento, Id, Tipologia, Scadenza, EnteRilascio) VALUES (_numdocumento, idutente, _tipologia, _scadenza, _enterilascio);
     END IF;
@@ -45,7 +45,6 @@ CREATE PROCEDURE EliminazioneUtente(IN _id INT)
 BEGIN
 	
     DECLARE esiste INT DEFAULT 0;
-    DECLARE idutente INT DEFAULT 0;
     
     -- Verifico se l'utente già esiste
     SET esiste =	(
@@ -73,7 +72,6 @@ CREATE PROCEDURE CaratteristicheAuto(IN _targa INT)
 BEGIN
 	
     DECLARE esiste INT DEFAULT 0;
-    DECLARE idutente INT DEFAULT 0;
     
     -- Verifico se l'utente già esiste
     SET esiste =(
