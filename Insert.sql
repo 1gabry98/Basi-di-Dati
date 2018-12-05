@@ -7,8 +7,8 @@ CALL RegistraUtente('root' , 'Via Roma 11', 'Francesca', 'Tonioni','ANRR6EWRERE9
 CALL RegistraUtente('root' , 'Via Napoli 45', 'Andrea Angelo', 'Scebba','ANRRFWEWWW9203','AW92812','Carta di identità','2023-03-01','Comune');
 
 -- AUTO
-INSERT INTO `progetto`.`auto` (`Targa`, `Id`) VALUES ('AS214HM', '1');
-INSERT INTO `progetto`.`auto` (`Targa`, `Id`) VALUES ('AX123AB', '3');
+CALL RegistrazioneAuto('AE987CB','1','4','200','2010','Gasolio','1200','Panamera','Porsche','10000','12','0.4','10000', '1', '0', '0', '20', '12000', '24');
+CALL RegistrazioneAuto('AW123OB','3','4','200','2010','Gasolio','1500','Focus','Ford','10000','12','0.4','10000', '1', '0', '0', '20', '12000', '24');
 
 
 -- SHARING MULTIPLO
