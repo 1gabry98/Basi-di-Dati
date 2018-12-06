@@ -136,6 +136,29 @@ BEGIN
 	END IF;
 END $$
 
+-- VISUALIZZAZIONE VALUTAZIONE CMPLESSIVA DELL'UTENTE
 
+DROP PROCEDURE IF EXISTS ValutazioneUtente $$
+CREATE PROCEDURE ValutazioneUtente(IN _id INT)
+BEGIN
+	
+    DECLARE esiste INT DEFAULT 0;
+    
+    
+    SET esiste = (
+			SELECT 	COUNT(*)
+			FROM 	Utente U
+			WHERE	U.Id = _id
+		 );
+    
+   	IF esiste = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Utente non esistente';
+	ELSEIF esiste = 1 THEN
+		SELECT	U.MediaVoto, AVG(S.Persona) AS Persona, AVG(S.PiacereViaggio) AS PiacereDiViaggio, AVG(S.Serietà) AS Serietà, AVG(S.Comportamento) AS Comportamento
+        FROM 	Utente U NATURAL JOIN StelleUtente S
+        WHERE 	U.Id = _id;
+    END IF;
+END $$
 
 DELIMITER ;
