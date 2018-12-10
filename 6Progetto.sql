@@ -2300,6 +2300,7 @@ END $$
 
 
 						   
+
 -- OPERAZIONE 6: CALCOLO COSTO DI UN POOL
 DROP PROCEDURE IF EXISTS CostoPool $$
 CREATE PROCEDURE CostoPool(IN _codpool INT)
@@ -2320,6 +2321,9 @@ BEGIN
     DECLARE tipostrada VARCHAR(30) DEFAULT ' '; 
     DECLARE finito INT DEFAULT 0;
     DECLARE tot DOUBLE DEFAULT 0;
+    DECLARE kmfinest DOUBLE DEFAULT 0;
+    DECLARE kminiziost DOUBLE DEFAULT 0;
+    
     
     -- Dichiarazione dei cursuori
     DECLARE InizioStrada CURSOR FOR
@@ -2389,10 +2393,13 @@ preleva : 	LOOP
 					LEAVE preleva;
 				END IF;
                 
-                SET stradapercorsa = FineStrada - InizioStrada;
+                FETCH InizioStrada INTO kminiziost;
+				FETCH FineStrada INTO kmfinest;
+
+                SET stradapercorsa = kmfinest - kminiziost;
                 
                 SELECT 	Categorizzazione INTO tipostrada
-                FROM	Strada 
+                FROM	Strada
                 WHERE	CodStrada = Codicestrada;
                 
                 CASE
