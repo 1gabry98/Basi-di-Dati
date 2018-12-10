@@ -2309,18 +2309,16 @@ BEGIN
     DECLARE esiste INT DEFAULT 0;
     DECLARE numKm DOUBLE DEFAULT 0;
     DECLARE costocarbutante DOUBLE DEFAULT 0;
-    DECLARE consumocarbutante DOUBLE DEFAULT 0;
-    DECLARE operativo DOUBLE DEFAULT 0;
     DECLARE usura DOUBLE DEFAULT 0;
     DECLARE urbano DOUBLE DEFAULT 0;
     DECLARE extraurbano DOUBLE DEFAULT 0;
     DECLARE misto DOUBLE DEFAULT 0;
     DECLARE stradapercorsa DOUBLE DEFAULT 0;
-    DECLARE consumoperstrada DOUBLE DEFAULT 0;
+    DECLARE kmperstradaurbana DOUBLE DEFAULT 0;
+    DECLARE kmperstradaextra DOUBLE DEFAULT 0;
+    DECLARE kmperstradamista DOUBLE DEFAULT 0;
     DECLARE tipostrada VARCHAR(30) DEFAULT ' '; 
-
     DECLARE finito INT DEFAULT 0;
-    
     DECLARE tot DOUBLE DEFAULT 0;
     
     -- Dichiarazione dei cursuori
@@ -2361,15 +2359,7 @@ BEGIN
             FROM	TragittoPool TP
             WHERE	TP.CodPool = _codpool;
             
-            SELECT 	S.ConsumoCarburante INTO consumocarbutante
-            FROM	SommaCostiAttualePool S
-            WHERE	S.CodPool = _codpool;
-            
             SELECT 	S.CostoCarburante INTO costocarbutante
-            FROM	SommaCostiAttualePool S
-            WHERE	S.CodPool = _codpool;
-            
-            SELECT 	S.CostoOperativo INTO operativo
             FROM	SommaCostiAttualePool S
             WHERE	S.CodPool = _codpool;
             
@@ -2392,7 +2382,8 @@ BEGIN
             OPEN InizioStrada;
 			OPEN FineStrada;
             OPEN Codicestrada;
-			-- Ciclo
+			
+            -- Ciclo
 preleva : 	LOOP
 				IF finito = 1 THEN
 					LEAVE preleva;
@@ -2406,17 +2397,29 @@ preleva : 	LOOP
                 
                 CASE
 					WHEN tipostrada = 'Urbana' THEN
-						SET consumoperstrada = consumoperstrada + stradapercorsa*urbano;
+						SET kmperstradaurbana = kmperstradaurbana + stradapercorsa;
 					WHEN tipostrada = 'ExtraUrbana' OR tipostrada = 'Autostrada' THEN
-						SET consumoperstrada = consumoperstrada + stradapercorsa*extraurbano;
+						SET kmperstradaextra = kmperstradaextra + stradapercorsa;
 					WHEN tipostrada = 'Misto' THEN
-						SET consumoperstrada = consumoperstrada + stradapercorsa*misto;                        
+						SET kmperstradamista = kmperstradamista + stradapercorsa;                        
                 END CASE;
             END LOOP preleva;
             
-            SET tot = consumoperstrada + costocarbutante + consumocarbutante*numKm + operativo*numKm + usura*numKm;
-			
-            SELECT tot AS CostoPool;
+            CLOSE InizioStrada;
+			CLOSE FineStrada;
+            CLOSE Codicestrada;
+            
+            UPDATE	SommaCostiAttualePool
+			SET		CostoOperativo = numKm*usura
+			WHERE	CodPool = _codpool;
+            
+            UPDATE	SommaCostiAttualePool
+			SET		ConsumoCarburante = (kmperstradaurbana/urbano) + (kmperstradaextra/extraurbano) + (kmperstradamista/misto)
+			WHERE	CodPool = _codpool;
+            
+            
+            SET tot = (kmperstradaurbana/urbano)*costocarbutante + (kmperstradaextra/extraurbano)*costocarbutante + (kmperstradamista/misto)*costocarbutante + numKm*usura;
+			SELECT tot AS CostoPool;
 		END;
 	END IF;
 END $$
