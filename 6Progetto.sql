@@ -847,6 +847,23 @@ CREATE TABLE TrackingPool
         REFERENCES Strada(CodStrada)
 );
 
+
+CREATE TABLE StradeTragittoPool 
+(
+	CodStrada INT NOT NULL,
+    CodPool INT NOT NULL,
+    kmInizioStrada INT NOT NULL,
+    kmFineStrada INT NOT NULL,
+        PRIMARY KEY (CodStrada),
+        FOREIGN KEY (CodStrada)
+        REFERENCES Strada(CodStrada),
+        
+        FOREIGN KEY (CodPool)
+        REFERENCES Pool(CodPool)
+);
+
+
+
 /*TRIGGER*/
 DELIMITER $$
 CREATE TRIGGER aggiorna_media_voto
