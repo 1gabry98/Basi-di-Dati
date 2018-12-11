@@ -2680,28 +2680,28 @@ BEGIN
 	DECLARE percent DOUBLE DEFAULT 0;
     DECLARE finito INT DEFAULT 0;
     DECLARE Affidabilita DOUBLE DEFAULT 0;
-
+   
 
     DECLARE PercentCursorNoleggio CURSOR FOR
 		SELECT	PercentualeDiResponsabilita
         FROM 	SinistroNoleggio 
         WHERE 	IdGuidatore = _id
 				AND
-				YEAR(CURRENT_DATE) - INTERVAL 4 YEAR > YEAR(Orario);
+				YEAR(CURRENT_DATE) - 4 < YEAR(Orario);
 	
     DECLARE PercentCursorSharing CURSOR FOR
 		SELECT	S.PercentualeDiResponsabilita
         FROM 	SinistroSharing S INNER JOIN Auto A ON S.TargaVeicoloProponente = A.Targa
         WHERE 	A.Id = _id
 				AND
-				YEAR(CURRENT_DATE) - INTERVAL 4 YEAR > YEAR(S.Orario);
+				YEAR(CURRENT_DATE) - 4 < YEAR(Orario);
 	
     DECLARE PercentCursorPool CURSOR FOR
 		SELECT	S.PercentualeDiResponsabilita
         FROM 	SinistroPool S INNER JOIN Auto A ON S.TargaVeicoloProponente = A.Targa
         WHERE 	A.Id = _id
 				AND
-				YEAR(CURRENT_DATE) - INTERVAL 4 YEAR > YEAR(S.Orario);
+				YEAR(CURRENT_DATE) - 4 < YEAR(Orario);
     
     -- Dichiarazione Handler
     DECLARE CONTINUE HANDLER
@@ -2761,7 +2761,6 @@ BEGIN
 			
 			
 			FETCH PercentCursorNoleggio INTO percent;
-		
 			
 			CASE 
 				WHEN (percent <= 100) AND (percent >= 91) THEN
@@ -2784,10 +2783,11 @@ BEGIN
                     END;
             END CASE; 
             
+            
 		END LOOP prelevanoleggio;
         
         CLOSE PercentCursorNoleggio;
-        SET finito = 0;
+        -- SET finito = 0;
                           
         
         prelevasharing: LOOP
@@ -2797,7 +2797,6 @@ BEGIN
 			
 			
 			FETCH PercentCursorSharing INTO percent;
-            
 			
 			CASE 
 				WHEN (percent <= 100) AND (percent >= 91) THEN
@@ -2822,7 +2821,7 @@ BEGIN
 		END LOOP prelevasharing;                    
 		
         CLOSE PercentCursorSharing;
-        SET finito = 0;
+        -- SET finito = 0;
         
         prelevapool: LOOP
 			IF finito = 1 THEN
@@ -2831,10 +2830,8 @@ BEGIN
 			
 			
 			FETCH PercentCursorPool INTO percent;
-		
-			
 			CASE 
-					WHEN (percent <= 100) AND (percent >= 91) THEN
+				WHEN (percent <= 100) AND (percent >= 91) THEN
 					SET Y = Y + percent*(10/20);
 				WHEN (percent <= 90) AND (percent >= 71) THEN
 					SET Y = Y + percent*(6/20);
@@ -2856,13 +2853,12 @@ BEGIN
 		END LOOP prelevapool; 
         
         CLOSE PercentCursorPool;
-        
+		
+       
         SET Affidabilita = (40 - X) + (60 - Y);
-        SELECT	Affidabilita, X, Y;
-        
-        
+        SELECT	Affidabilita;
     END IF;
-END $$
+END $$$
 
 
 
