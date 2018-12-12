@@ -2755,12 +2755,11 @@ BEGIN
         OPEN PercentCursorPool;
         
 		prelevanoleggio: LOOP
-			IF finito = 1 THEN
+			FETCH PercentCursorNoleggio INTO percent;
+            
+            IF finito = 1 THEN
 				LEAVE prelevanoleggio;
 			END IF;
-			
-			
-			FETCH PercentCursorNoleggio INTO percent;
 			
 			CASE 
 				WHEN (percent <= 100) AND (percent >= 91) THEN
@@ -2791,12 +2790,11 @@ BEGIN
                           
         
         prelevasharing: LOOP
-			IF finito = 1 THEN
+			FETCH PercentCursorSharing INTO percent;
+			
+            IF finito = 1 THEN
 				LEAVE prelevasharing;
 			END IF;
-			
-			
-			FETCH PercentCursorSharing INTO percent;
 			
 			CASE 
 				WHEN (percent <= 100) AND (percent >= 91) THEN
@@ -2824,12 +2822,12 @@ BEGIN
         -- SET finito = 0;
         
         prelevapool: LOOP
-			IF finito = 1 THEN
+			FETCH PercentCursorPool INTO percent;
+            
+            IF finito = 1 THEN
 				LEAVE prelevapool;
 			END IF;
 			
-			
-			FETCH PercentCursorPool INTO percent;
 			CASE 
 				WHEN (percent <= 100) AND (percent >= 91) THEN
 					SET Y = Y + percent*(10/20);
@@ -2858,7 +2856,44 @@ BEGIN
         SET Affidabilita = (40 - X) + (60 - Y);
         SELECT	Affidabilita;
     END IF;
-END $$$
+END $$
+
+
+-- OPERAZIONE 9: CALCOLO NUMERO DI POOL E RIDE SHARING FATTI DA UN SINGOLO UTENTE
+DROP PROCEDURE IF EXISTS NumeroServiziErogati $$
+CREATE PROCEDURE NumeroServiziErogati(IN _id INT)
+BEGIN
+	
+    DECLARE esiste INT DEFAULT 0;
+	DECLARE n INT DEFAULT 0;
+
+	
+    -- Verifico se l'utente già esiste
+    SET esiste =	(
+						SELECT 	COUNT(*)
+						FROM 	Utente U
+						WHERE	U.Id = _id
+					);
+    
+    IF esiste = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Utente non esistente';
+	ELSEIF esiste = 1 THEN
+	SET N =	(
+				SELECT	COUNT(*)
+				FROM 	RideSharing
+                WHERE	IdProponente = _id
+			)
+            +
+            (
+				SELECT	COUNT(*)
+				FROM 	Pool
+                WHERE	IdProponente = _id
+            );
+            
+            SELECT n AS NumeroServiziErogati;
+    END IF;
+END $$
 
 
 
