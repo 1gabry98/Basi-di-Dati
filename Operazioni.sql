@@ -302,4 +302,197 @@ preleva : 	LOOP
 	END IF;
 END $$
 
+						       
+-- OPERAZIONE 7: VISUALIZZAZIONE AFFIDABILITA' UTENTE
+DROP PROCEDURE IF EXISTS AffidabilitaUtente $$
+CREATE PROCEDURE AffidabilitaUtente(IN _id INT)
+BEGIN
+	DECLARE esiste INT DEFAULT 0;
+    DECLARE mediavoto DOUBLE DEFAULT 0;
+	DECLARE X INT DEFAULT 0;
+	DECLARE Y DOUBLE DEFAULT 0;
+	DECLARE percent DOUBLE DEFAULT 0;
+    DECLARE finito INT DEFAULT 0;
+    DECLARE Affidabilita DOUBLE DEFAULT 0;
+   
+
+    DECLARE PercentCursorNoleggio CURSOR FOR
+		SELECT	PercentualeDiResponsabilita
+        FROM 	SinistroNoleggio 
+        WHERE 	IdGuidatore = _id
+				AND
+				YEAR(CURRENT_DATE) - 4 < YEAR(Orario);
+	
+    DECLARE PercentCursorSharing CURSOR FOR
+		SELECT	S.PercentualeDiResponsabilita
+        FROM 	SinistroSharing S INNER JOIN Auto A ON S.TargaVeicoloProponente = A.Targa
+        WHERE 	A.Id = _id
+				AND
+				YEAR(CURRENT_DATE) - 4 < YEAR(Orario);
+	
+    DECLARE PercentCursorPool CURSOR FOR
+		SELECT	S.PercentualeDiResponsabilita
+        FROM 	SinistroPool S INNER JOIN Auto A ON S.TargaVeicoloProponente = A.Targa
+        WHERE 	A.Id = _id
+				AND
+				YEAR(CURRENT_DATE) - 4 < YEAR(Orario);
+    
+    -- Dichiarazione Handler
+    DECLARE CONTINUE HANDLER
+		FOR NOT FOUND SET finito = 1;  
+    
+    -- Verifico se l'utente già esiste
+    SET esiste =	(
+						SELECT 	COUNT(*)
+						FROM 	Utente U
+						WHERE	U.Id = _id
+					);
+    
+    IF esiste = 0 THEN
+		SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Errore. Utente non esistente';
+	ELSEIF esiste = 1 THEN
+		
+        SELECT 	U.MediaVoto INTO mediavoto
+		FROM	Utente U
+		WHERE	U.Id = _id;
+        
+        CASE 
+			WHEN (mediavoto <= 5.0) AND (mediavoto >= 4.8) THEN
+				SET X = 0;
+			WHEN (mediavoto <= 4.7) AND (mediavoto >= 4.5) THEN
+				SET X = 10;
+			WHEN (mediavoto <= 4.4) AND (mediavoto >= 4.1) THEN
+				SET X = 15;
+			WHEN (mediavoto <= 4.0) AND (mediavoto >= 3.7) THEN
+				SET X = 20;
+			WHEN (mediavoto <= 3.6) AND (mediavoto >= 3.1) THEN
+				SET X = 35;
+			WHEN (mediavoto <= 3.0) AND (mediavoto >= 2.8) THEN
+				SET X = 40;
+			WHEN (mediavoto <= 2.4) AND (mediavoto >= 2.2) THEN
+				SET X = 50;
+			WHEN (mediavoto <= 1.9) AND (mediavoto >= 1.0) THEN
+				SET X = 60;
+			WHEN (mediavoto <= 0.9) AND (mediavoto >= 0) THEN
+				SET X = 80;
+			
+			ELSE
+				BEGIN
+				END;
+		END CASE;    
+        
+       
+        
+		OPEN PercentCursorNoleggio;
+        OPEN PercentCursorSharing;
+        OPEN PercentCursorPool;
+        
+		prelevanoleggio: LOOP
+			IF finito = 1 THEN
+				LEAVE prelevanoleggio;
+			END IF;
+			
+			
+			FETCH PercentCursorNoleggio INTO percent;
+			
+			CASE 
+				WHEN (percent <= 100) AND (percent >= 91) THEN
+					SET Y = Y + percent*(10/20);
+				WHEN (percent <= 90) AND (percent >= 71) THEN
+					SET Y = Y + percent*(6/20);
+				WHEN (percent <= 70) AND (percent >= 51) THEN
+					SET Y = Y + percent*(5/20);
+				WHEN (percent <= 50) AND (percent >= 31) THEN
+					SET Y = Y + percent*(4/20);
+				WHEN (percent <= 30) AND (percent >= 21) THEN
+					SET Y = Y + percent*(3/20);
+				WHEN (percent <= 20) AND (percent >= 11) THEN
+					SET Y = Y + percent*(2/20);
+				WHEN (percent <= 10) AND (percent >= 0) THEN
+					SET Y = Y + percent*(1/20);
+			
+				ELSE
+					BEGIN
+                    END;
+            END CASE; 
+            
+            
+		END LOOP prelevanoleggio;
+        
+        CLOSE PercentCursorNoleggio;
+        -- SET finito = 0;
+                          
+        
+        prelevasharing: LOOP
+			IF finito = 1 THEN
+				LEAVE prelevasharing;
+			END IF;
+			
+			
+			FETCH PercentCursorSharing INTO percent;
+			
+			CASE 
+				WHEN (percent <= 100) AND (percent >= 91) THEN
+					SET Y = Y + percent*(10/20);
+				WHEN (percent <= 90) AND (percent >= 71) THEN
+					SET Y = Y + percent*(6/20);
+				WHEN (percent <= 70) AND (percent >= 51) THEN
+					SET Y = Y + percent*(5/20);
+				WHEN (percent <= 50) AND (percent >= 31) THEN
+					SET Y = Y + percent*(4/20);
+				WHEN (percent <= 30) AND (percent >= 21) THEN
+					SET Y = Y + percent*(3/20);
+				WHEN (percent <= 20) AND (percent >= 11) THEN
+					SET Y = Y + percent*(2/20);
+				WHEN (percent <= 10) AND (percent >= 0) THEN
+					SET Y = Y + percent*(1/20);
+				
+                ELSE
+					BEGIN
+                    END;
+			END CASE; 
+		END LOOP prelevasharing;                    
+		
+        CLOSE PercentCursorSharing;
+        -- SET finito = 0;
+        
+        prelevapool: LOOP
+			IF finito = 1 THEN
+				LEAVE prelevapool;
+			END IF;
+			
+			
+			FETCH PercentCursorPool INTO percent;
+			CASE 
+				WHEN (percent <= 100) AND (percent >= 91) THEN
+					SET Y = Y + percent*(10/20);
+				WHEN (percent <= 90) AND (percent >= 71) THEN
+					SET Y = Y + percent*(6/20);
+				WHEN (percent <= 70) AND (percent >= 51) THEN
+					SET Y = Y + percent*(5/20);
+				WHEN (percent <= 50) AND (percent >= 31) THEN
+					SET Y = Y + percent*(4/20);
+				WHEN (percent <= 30) AND (percent >= 21) THEN
+					SET Y = Y + percent*(3/20);
+				WHEN (percent <= 20) AND (percent >= 11) THEN
+					SET Y = Y + percent*(2/20);
+				WHEN (percent <= 10) AND (percent >= 0) THEN
+					SET Y = Y + percent*(1/20);
+				
+                ELSE
+					BEGIN
+                    END;
+			END CASE; 
+		END LOOP prelevapool; 
+        
+        CLOSE PercentCursorPool;
+		
+       
+        SET Affidabilita = (40 - X) + (60 - Y);
+        SELECT	Affidabilita;
+    END IF;
+END $$
+						       
+						       
 DELIMITER ;
