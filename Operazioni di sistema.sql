@@ -114,7 +114,7 @@ BEGIN
 			
             CASE
 				WHEN densita <= 35 THEN
-					SET TempoStimato = TempoStimato + TempoStimato*0.1;
+					SET TempoStimato = TempoStimato;
 				WHEN densita > 35 AND densita <= 50  THEN
 					SET TempoStimato = TempoStimato + TempoStimato*0.2;
 				WHEN densita > 50 AND densita <= 65  THEN
