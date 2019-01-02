@@ -35,6 +35,7 @@ CREATE TABLE Documento
 );
 
 
+
 CREATE TABLE ValutazioneUtente
 (
     CodVoto INT AUTO_INCREMENT,
@@ -46,8 +47,6 @@ CREATE TABLE ValutazioneUtente
     REFERENCES Utente (Id)
     ON DELETE CASCADE
 );
-
-
 
 
 
@@ -102,6 +101,7 @@ CREATE TABLE SharingMultiplo
 );
 
 
+
 CREATE TABLE TragittoSharing 
 (
     CodTragitto INT NOT NULL AUTO_INCREMENT,
@@ -109,6 +109,8 @@ CREATE TABLE TragittoSharing
     KmPercorsi DOUBLE NOT NULL,
         PRIMARY KEY(CodTragitto)
 );
+
+
 
 CREATE TABLE Strada 
 (
@@ -125,6 +127,7 @@ CREATE TABLE Strada
 );
 
 
+
 CREATE TABLE PosizionePartenzaSharing 
 (
 	CodSharing INT NOT NULL,
@@ -139,16 +142,16 @@ CREATE TABLE PosizionePartenzaSharing
 
 
 
-CREATE TABLE PosizioneArrivoSharing (
-CodSharing INT NOT NULL,
-CodStrada INT NOT NULL,
-numChilometro DOUBLE NOT NULL,
-    PRIMARY KEY(CodStrada,CodSharing),
-    FOREIGN KEY(CodStrada) 
-    REFERENCES Strada(CodStrada)
-	ON DELETE CASCADE
+CREATE TABLE PosizioneArrivoSharing 
+(
+	CodSharing INT NOT NULL,
+	CodStrada INT NOT NULL,
+	numChilometro DOUBLE NOT NULL,
+	    PRIMARY KEY(CodStrada,CodSharing),
+	    FOREIGN KEY(CodStrada) 
+	    REFERENCES Strada(CodStrada)
+		ON DELETE CASCADE
 );
-
 
 
 
@@ -168,6 +171,8 @@ CREATE TABLE CorsieDiImmissione
 		 REFERENCES Strada(CodStrada)
          ON DELETE CASCADE
 );
+
+
 
 CREATE TABLE Pedaggio 
 (
@@ -196,6 +201,8 @@ CREATE TABLE LimitiDiVelocita
         REFERENCES Strada(CodStrada)
         ON DELETE CASCADE
 );    
+
+
 
 CREATE TABLE PrenotazioneDiNoleggio
 (
@@ -249,6 +256,8 @@ CREATE TABLE StelleFruitoreNoleggio
         ON DELETE CASCADE
 );
 
+
+
 CREATE TABLE ValutazioneProponenteNoleggio 
 (
     CodVoto INT NOT NULL AUTO_INCREMENT,
@@ -263,8 +272,8 @@ CREATE TABLE ValutazioneProponenteNoleggio
         FOREIGN KEY (IdFruitore) 
         REFERENCES Utente(Id)
         ON DELETE CASCADE
-
 );
+
 
 
 CREATE TABLE Auto 
@@ -282,40 +291,43 @@ CREATE TABLE Auto
 
 
 
-
-CREATE TABLE StelleProponenteNoleggio (
+CREATE TABLE StelleProponenteNoleggio 
+(
     CodVoto INT NOT NULL,
     Id INT NOT NULL,
     Persona DOUBLE NOT NULL,
     PiacereViaggio DOUBLE NOT NULL,
     Comportamento DOUBLE NOT NULL,
     Serieta DOUBLE NOT NULL,
-		PRIMARY KEY (CodVoto),
-		FOREIGN KEY (CodVoto)
-		REFERENCES ValutazioneProponenteNoleggio (CodVoto)
+	PRIMARY KEY (CodVoto),
+	FOREIGN KEY (CodVoto)
+	REFERENCES ValutazioneProponenteNoleggio (CodVoto)
         ON DELETE CASCADE
     
 );
 
 
 
-CREATE TABLE ArchivioPrenotazioniRifiutate (
+CREATE TABLE ArchivioPrenotazioniRifiutate 
+(
     CodNoleggio INT NOT NULL,
     IdFruitore INT NOT NULL,
     IdProponente INT NOT NULL,
     Targa VARCHAR(7) NOT NULL,
-		PRIMARY KEY (CodNoleggio),
-		FOREIGN KEY (IdFruitore)
+	PRIMARY KEY (CodNoleggio),
+	FOREIGN KEY (IdFruitore)
         REFERENCES Utente (Id)
         ON DELETE CASCADE,
         
-		FOREIGN KEY (IdProponente)
-		REFERENCES Utente(Id)
+	FOREIGN KEY (IdProponente)
+	REFERENCES Utente(Id)
         ON DELETE CASCADE
 );
 
 
-CREATE TABLE ArchivioPrenotazioniVecchie (
+
+CREATE TABLE ArchivioPrenotazioniVecchie 
+(
     CodNoleggio INT NOT NULL,
     DataInizio DATE NOT NULL,
     DataFine DATE NOT NULL,
@@ -335,8 +347,8 @@ CREATE TABLE ArchivioPrenotazioniVecchie (
 
 
 
-
-CREATE TABLE TragittoNoleggio (
+CREATE TABLE TragittoNoleggio 
+(
     CodTragitto INT NOT NULL AUTO_INCREMENT,
     KmPercorsi DOUBLE NOT NULL,
     PRIMARY KEY (CodTragitto)
@@ -344,7 +356,8 @@ CREATE TABLE TragittoNoleggio (
 
 
 
-CREATE TABLE PosizioneArrivoNoleggio (
+CREATE TABLE PosizioneArrivoNoleggio 
+(
     CodStrada INT NOT NULL AUTO_INCREMENT,
     NumChilometro INT NOT NULL,
 		PRIMARY KEY (CodStrada),
@@ -354,7 +367,9 @@ CREATE TABLE PosizioneArrivoNoleggio (
 );
 
 
-CREATE TABLE PosizionePartenzaNoleggio (
+
+CREATE TABLE PosizionePartenzaNoleggio 
+(
     CodStrada INT NOT NULL,
     NumChilometro DOUBLE NOT NULL,
 		PRIMARY KEY (CodStrada),
@@ -362,8 +377,6 @@ CREATE TABLE PosizionePartenzaNoleggio (
         REFERENCES Strada (CodStrada)
         ON DELETE CASCADE
 );
-
-
 
 
 
@@ -380,7 +393,6 @@ CREATE TABLE TrackingNoleggio
         REFERENCES Strada(CodStrada)
         ON DELETE NO ACTION
 ); 
-
 
 
 
@@ -411,6 +423,7 @@ CREATE TABLE SinistroNoleggio
 );
 
 
+
 CREATE TABLE GeneralitaSinistroNoleggio
 (
     NumDocumento VARCHAR (9) NOT NULL,
@@ -427,6 +440,7 @@ CREATE TABLE GeneralitaSinistroNoleggio
 );
 
 
+
 CREATE TABLE DocumentoDiIdentitaSinistroNoleggio
 (
     NumDocumento VARCHAR (9) NOT NULL,
@@ -438,6 +452,7 @@ CREATE TABLE DocumentoDiIdentitaSinistroNoleggio
         REFERENCES Documento(NumDocumento)
         ON DELETE NO ACTION
 );
+
 
 
 CREATE TABLE Pool 
@@ -459,6 +474,9 @@ CREATE TABLE Pool
         REFERENCES Auto(Targa)
         ON DELETE CASCADE
 );
+
+
+
 CREATE TABLE ValutazioneFruitorePool
 (
 	CodVoto INT NOT NULL AUTO_INCREMENT,
@@ -475,6 +493,8 @@ CREATE TABLE ValutazioneFruitorePool
         ON DELETE CASCADE
 );
 
+
+
 CREATE TABLE StelleFruitorePool
 (
 	CodVoto INT NOT NULL,
@@ -488,6 +508,8 @@ CREATE TABLE StelleFruitorePool
         REFERENCES Utente(Id)
         ON DELETE CASCADE
 );
+
+
 
 CREATE TABLE ValutazioneProponentePool
 (
@@ -505,6 +527,8 @@ CREATE TABLE ValutazioneProponentePool
         ON DELETE CASCADE
 );
 
+
+
 CREATE TABLE StelleProponentePool
 (
 	CodVoto INT NOT NULL,
@@ -514,10 +538,12 @@ CREATE TABLE StelleProponentePool
     Serieta INT NOT NULL,
     Comportamento INT NOT NULL,
 	PRIMARY KEY (CodVoto),
-		FOREIGN KEY (Id)
+	FOREIGN KEY (Id)
         REFERENCES Utente(Id)
         ON DELETE CASCADE
 );
+
+
 
 CREATE TABLE AdesioniPool
 (
@@ -533,6 +559,8 @@ CREATE TABLE AdesioniPool
 		ON DELETE NO ACTION
 );
 
+
+
 CREATE TABLE TragittoPool 
 (
     CodTragitto INT NOT NULL AUTO_INCREMENT,
@@ -542,6 +570,7 @@ CREATE TABLE TragittoPool
             FOREIGN KEY (CodPool)
             REFERENCES Pool(CodPool)
 );
+
 
 
 CREATE TABLE PosizioneArrivoPool
@@ -556,6 +585,7 @@ CREATE TABLE PosizioneArrivoPool
 );
 
 
+
 CREATE TABLE PosizionePartenzaPool
 (
 	CodPool INT NOT NULL,
@@ -566,6 +596,7 @@ CREATE TABLE PosizionePartenzaPool
         REFERENCES Strada(CodStrada)
         ON DELETE CASCADE
 );
+
 
 
 CREATE TABLE SinistroPool
@@ -587,6 +618,7 @@ CREATE TABLE SinistroPool
         REFERENCES Strada(CodStrada)
         ON DELETE NO ACTION	
 );
+
 
 
 CREATE TABLE GeneralitaSinistroPool
@@ -619,6 +651,7 @@ CREATE TABLE DocumentoDiIdentitaSinistroPool
 );
 
 
+
 CREATE TABLE SommaCostiAttualePool
 (
     CodPool INT NOT NULL,
@@ -634,6 +667,7 @@ CREATE TABLE SommaCostiAttualePool
         REFERENCES Pool(CodPool)    
         ON DELETE CASCADE
 );
+
 
 
 CREATE TABLE ArchivioPoolVecchi 
@@ -798,6 +832,7 @@ CREATE TABLE RideSharing
 );
 
 
+
 CREATE TABLE AdesioniRideSharing 
 (
     CodSharing INT NOT NULL,
@@ -811,6 +846,7 @@ CREATE TABLE AdesioniRideSharing
         REFERENCES Utente(Id)
         ON DELETE CASCADE
 );
+
 
 
 CREATE TABLE ValutazioneFruitoreRideSharing 
@@ -858,9 +894,13 @@ CREATE TABLE ValutazioneProponenteRideSharing
     IdFruitore INT NOT NULL,
     Recensione VARCHAR(200) NOT NULL,
         PRIMARY KEY (CodVoto),
+		FOREIGN KEY(IdFruitore) 
+        REFERENCES Utente(Id)
+        ON DELETE CASCADE ,
+        
         FOREIGN KEY(IdProponente) 
         REFERENCES Utente(Id)
-        ON DELETE CASCADE 
+        ON DELETE CASCADE  
 );
 
 
@@ -874,9 +914,13 @@ CREATE TABLE StelleProponenteRideSharing
     Serieta  DOUBLE NOT NULL, 
     Comportamento DOUBLE NOT NULL,
         PRIMARY KEY (CodVoto),
-        FOREIGN KEY(CodVoto) 
+		FOREIGN KEY(CodVoto) 
         REFERENCES ValutazioneProponenteRideSharing(CodVoto)
-        ON DELETE CASCADE 
+        ON DELETE CASCADE ,
+        
+        FOREIGN KEY(Id)
+        REFERENCES Utente(Id)
+        ON DELETE CASCADE
 );
 
 
@@ -942,7 +986,6 @@ CREATE TABLE SinistroSharing
 
 
 
-
 CREATE TABLE GeneralitaSinistroSharing 
 (
     NumDocumento VARCHAR (9) NOT NULL,
@@ -990,10 +1033,12 @@ CREATE TABLE TrackingPool
         REFERENCES Pool(CodPool)
         ON DELETE NO ACTION,
         
-        FOREIGN KEY (CodStrada)
-        REFERENCES Strada(CodStrada)
+        FOREIGN KEY (Targa)
+        REFERENCES Auto(Targa)
         ON DELETE NO ACTION
 );
+
+
 
 CREATE TABLE StradeTragittoPool 
 (
@@ -1011,6 +1056,8 @@ CREATE TABLE StradeTragittoPool
         ON DELETE CASCADE
 );
 
+
+
 CREATE TABLE StradeTragittoSharing
 (
 	CodStrada INT NOT NULL,
@@ -1027,6 +1074,8 @@ CREATE TABLE StradeTragittoSharing
         ON DELETE CASCADE
 );
 
+
+
 CREATE TABLE Incrocio
 (
 	CodStrada1 INT NOT NULL,
@@ -1042,6 +1091,8 @@ CREATE TABLE Incrocio
         REFERENCES Strada(CodStrada)
         ON DELETE CASCADE
 );
+
+
 
 CREATE TABLE Variazione
 (
@@ -1061,6 +1112,7 @@ CREATE TABLE Variazione
         REFERENCES Pool(CodPool)
         ON DELETE CASCADE
 );
+
 
 
 /*TRIGGER*/ -- ------------------------------------------------------------------------------------------------
